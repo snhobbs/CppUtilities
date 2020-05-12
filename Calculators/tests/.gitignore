@@ -1,0 +1,9 @@
+CalculatorTests
+CMakeFiles/
+CMakeCache.txt
+Makefile
+cmake_install.cmake
+Tests
+/.metadata/
+.settings
+CooperativeScheduler/
