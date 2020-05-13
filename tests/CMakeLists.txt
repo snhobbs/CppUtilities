@@ -10,7 +10,7 @@ set(dirs
  TemperatureMeasurement
 )
 foreach(dir ${dirs})
-  set(path ${PROJECT_SOURCE_DIR}/${dir}/tests)
+  set(path ${PROJECT_SOURCE_DIR}/include/${dir}/tests)
   if(EXISTS ${path})
     message(STATUS "${dir} has tests")
     list(APPEND source_directories ${path})
@@ -24,8 +24,8 @@ endforeach()
 
 #SET(CMAKE_CXX_COMPILER clang++-8)
 SET(CMAKE_CXX_COMPILER /usr/bin/g++-8)
-find_package(UnitTest++ QUIET)
 add_executable(tests)
+
 option(Sanitizer "Run address sanitizer" OFF)
 
 if(${Sanitizer})
@@ -95,10 +95,11 @@ target_link_libraries( tests asan)
 target_link_libraries( tests ubsan)
 #target_link_libraries( tests msan)
 
-target_link_libraries( tests UnitTest++)
+find_package(UnitTest++ QUIET)
+target_link_libraries(tests UnitTest++)
 
 target_include_directories(tests PUBLIC ${TESTSRC} )
-target_include_directories(tests PUBLIC ${CMAKE_SOURCE_DIR} )
+target_include_directories(tests PUBLIC ${PROJECT_SOURCE_DIR}/include )
 
 message(STATUS "Sources: ${DIR_SRCS}")
 set(EmbeddedCMake_DIR /home/simon/EmbeddedCMake)
