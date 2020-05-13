@@ -84,7 +84,7 @@ static_assert(crc8(std::array<uint8_t, 1>{0x00}.data(), 1) == 0xAC);
 inline constexpr uint8_t crc4_new(const uint8_t *const buffer,
                               const std::size_t data_length,
                               const uint8_t crc_initial_value = 0) {
-  const constexpr uint8_t crc4_polynomial = 0x3000;
+  const constexpr uint8_t crc4_polynomial = 0x03;
   const uint8_t crc = crc_uint8(buffer, data_length, crc4_polynomial, crc_initial_value);
   const uint8_t last4_bits = (0x000F & (crc >> 4)); // final 4-bit reminder is CRC code
   return 0xf & (last4_bits ^ 0x0);
@@ -92,8 +92,8 @@ inline constexpr uint8_t crc4_new(const uint8_t *const buffer,
 
 inline constexpr uint8_t crc4(const uint8_t *const buffer,
                               const std::size_t data_length) {
-  const constexpr uint8_t crc4_polynomial = 0x3000;
-  uint8_t n_rem = 0; //  crc reminder
+  const constexpr uint16_t crc4_polynomial = 0x3000;
+  uint16_t n_rem = 0; //  crc reminder
 
   for (std::size_t current_byte = 0; current_byte < data_length; current_byte++) {
     n_rem ^= buffer[current_byte];
