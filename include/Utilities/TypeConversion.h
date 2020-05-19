@@ -83,6 +83,43 @@ Make_LSB_uint16tFromu8Array(const T &data) {
   return Make_LSB_uint16_tFromU8Array(data);
 }
 
+template<typename T>
+inline constexpr T
+Make_LSB_IntegerTypeFromU8Array(const uint8_t *const data,
+                             const std::size_t data_length) {
+  static_assert(std::is_integral<T>());
+  //  first byte is shifted by 24 etc
+  assert(sizeof(T) >= data_length);
+  if (data_length > sizeof(T))
+    return 0;
+  T out = 0;
+  const constexpr std::size_t kByteSizeInBits = 8;
+  for (std::size_t i = 0; i < data_length; i++) {
+    std::size_t shift = (i) * kByteSizeInBits;
+    out += static_cast<T>((data[i] << shift));
+  }
+  return out;
+}
+
+template<typename T>
+inline constexpr T
+Make_MSB_IntegerTypeFromU8Array(const uint8_t *const data,
+                             const std::size_t data_length) {
+  static_assert(std::is_integral<T>());
+  //  first byte is shifted by 24 etc
+  assert(sizeof(T) >= data_length);
+  if (data_length > sizeof(T))
+    return 0;
+  T out = 0;
+  const constexpr std::size_t kByteSizeInBits = 8;
+  for (std::size_t i = 0; i < data_length; i++) {
+    std::size_t shift = ((data_length - 1) - i) * kByteSizeInBits;
+    out += static_cast<T>((data[i] << shift));
+  }
+  return out;
+}
+
+
 inline constexpr uint32_t
 Make_MSB_uint32_tFromU8Array(const uint8_t *const data) {
   return data[3] | data[2] << 8 | data[1] << 16 | data[0] << 24;

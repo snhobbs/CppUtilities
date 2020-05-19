@@ -6,6 +6,7 @@
 #define UTILITIES_CRC_H_
 #include <array>
 #include <cstdint>
+#include <cassert>
 
 namespace Utilities {
 
@@ -50,43 +51,39 @@ inline uint16_t crc16(const T &array, std::size_t length) {
   return Utilities::crc16(array.data(), length);
 }
 
+struct Crc8Setting {
+  const uint8_t polynomial = 0xff;
+  const uint8_t initial_value = 0xff;
+  const uint8_t final_xor = 0x00;
+  const bool reflect_in = false;
+  const bool reflect_out = false;
+};
+
 inline constexpr uint8_t crc_uint8(const uint8_t *const buffer,
-                              const std::size_t data_length,
-                              const uint8_t crc_polynomial = 0xff,
-                              const uint8_t crc_initial_value = 0xff) {
-  uint8_t crc = crc_initial_value;
+		  const std::size_t data_length, const Crc8Setting& settings) {
+  assert(!settings.reflect_in);
+  assert(!settings.reflect_out);
+  uint8_t crc = settings.initial_value;
   /* calculates 8-Bit checksum with given polynomial */
   for (std::size_t current_byte = 0; current_byte < data_length; current_byte++) {
     crc ^= (buffer[current_byte]);
     for (std::size_t crc_bit = 8; crc_bit > 0; --crc_bit) {
       const auto crc_shift = static_cast<uint8_t>(crc << 1);
       if (crc & 0x80) {
-        crc = (crc_shift) ^ crc_polynomial;
+        crc = (crc_shift) ^ settings.polynomial;
       } else {
         crc = crc_shift;
       }
     }
   }
-  return crc;
+  return crc^settings.final_xor;
 }
-
-inline constexpr uint8_t crc8(const uint8_t *const buffer,
-                              const std::size_t data_length,
-                              const uint8_t crc_initial_value = 0xff) {
-  const uint8_t crc8_polynomial = 0x31;  //  (x8 + x5 + x4 + 1)
-  return crc_uint8(buffer, data_length, crc8_polynomial, crc_initial_value);
-}
-
-static_assert(crc8(std::array<uint8_t, 2>{0xBE, 0xEF}.data(), 2, 0xff) == 0x92);
-static_assert(crc8(std::array<uint8_t, 1>{0x00}.data(), 1, 0xff) == 0xAC);
-
 
 inline constexpr uint8_t crc4_new(const uint8_t *const buffer,
-                              const std::size_t data_length,
-                              const uint8_t crc_initial_value = 0) {
+                              const std::size_t data_length) {
   const constexpr uint8_t crc4_polynomial = 0x03;
-  const uint8_t crc = crc_uint8(buffer, data_length, crc4_polynomial, crc_initial_value);
-  return crc & 0xf;
+  const Crc8Setting& settings{crc4_polynomial, 0x00, 0x00, false, false};
+  return crc_uint8(buffer, data_length, settings);
 }
 
 inline constexpr uint8_t crc4(const uint8_t *const buffer,
