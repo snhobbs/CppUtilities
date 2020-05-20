@@ -59,13 +59,30 @@ struct Crc8Setting {
   const bool reflect_out = false;
 };
 
+inline constexpr uint8_t reflect_byte(const uint8_t data){
+  const std::size_t kByteSize = 8;
+  uint8_t result = 0;
+  for(std::size_t i = 0; i < kByteSize; i++) {
+    result |= (1U & (data >> (kByteSize - i - 1))) << i;
+  }
+  return result;
+}
+
+static_assert(reflect_byte(0b00000001) == 0b10000000);
+static_assert(reflect_byte(0b00000011) == 0b11000000);
+static_assert(reflect_byte(0b00000111) == 0b11100000);
+static_assert(reflect_byte(0b00001111) == 0b11110000);
+static_assert(reflect_byte(0b10001111) == 0b11110001);
+
 inline constexpr uint8_t crc_uint8(const uint8_t *const buffer,
 		  const std::size_t data_length, const Crc8Setting& settings) {
-  assert(!settings.reflect_in);
-  assert(!settings.reflect_out);
   uint8_t crc = settings.initial_value;
   /* calculates 8-Bit checksum with given polynomial */
   for (std::size_t current_byte = 0; current_byte < data_length; current_byte++) {
+    uint8_t byte = buffer[current_byte];
+    if (settings.reflect_in) {
+      byte = reflect_byte(byte);
+    }
     crc ^= (buffer[current_byte]);
     for (std::size_t crc_bit = 8; crc_bit > 0; --crc_bit) {
       const auto crc_shift = static_cast<uint8_t>(crc << 1);
@@ -76,34 +93,12 @@ inline constexpr uint8_t crc_uint8(const uint8_t *const buffer,
       }
     }
   }
+  if (settings.reflect_out) {
+    crc = reflect_byte(crc);
+  }
   return crc^settings.final_xor;
 }
 
-inline constexpr uint8_t crc4_new(const uint8_t *const buffer,
-                              const std::size_t data_length) {
-  const constexpr uint8_t crc4_polynomial = 0x03;
-  const Crc8Setting& settings{crc4_polynomial, 0x00, 0x00, false, false};
-  return crc_uint8(buffer, data_length, settings);
-}
-
-inline constexpr uint8_t crc4(const uint8_t *const buffer,
-                              const std::size_t data_length) {
-  const constexpr uint16_t crc4_polynomial = 0x3000;
-  uint16_t crc = 0; //  crc reminder
-
-  for (std::size_t current_byte = 0; current_byte < data_length; current_byte++) {
-    crc = static_cast<uint16_t>(crc ^ buffer[current_byte]);
-    for (int n_bit = 8; n_bit > 0; n_bit--) {
-      const auto crc_shift = static_cast<uint16_t>(crc << 1);
-      if (crc & (0x8000)) {
-        crc = crc_shift ^ crc4_polynomial;
-      } else {
-        crc = crc_shift;
-      }
-    }
-  }
-  return (0x000F & (crc >> 12)); // take upper 4 bits 
-}
 } //  namespace Utilities
 
 #endif //  UTILITIES_CRC_H_
