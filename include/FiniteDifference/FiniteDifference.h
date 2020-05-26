@@ -23,11 +23,12 @@ class SecFiniteDif{
     static const constexpr int kWindowCount = kSecondDerivOrder+2;
     const uint32_t boxcar_length_;
 
- private:
     uint8_t newest_boxcar = 0;
     int32_t last_value = 0;
     unsigned int average_count{0};
     BootStage boot_stage{BootStage::kWindow0};  //  At first bootup the windows need to all be filled
+
+ protected:
     std::array<int32_t, kWindowCount> windows{};
 
     void bootup(const int32_t data) {

@@ -59,10 +59,10 @@ struct Crc8Setting {
   const bool reflect_out = false;
 };
 
-inline constexpr uint8_t reflect_byte(const uint8_t data){
+inline constexpr uint8_t reflect_byte(const uint8_t data) {
   const std::size_t kByteSize = 8;
   uint8_t result = 0;
-  for(std::size_t i = 0; i < kByteSize; i++) {
+  for (std::size_t i = 0; i < kByteSize; i++) {
     result |= (1U & (data >> (kByteSize - i - 1))) << i;
   }
   return result;
@@ -75,7 +75,7 @@ static_assert(reflect_byte(0b00001111) == 0b11110000);
 static_assert(reflect_byte(0b10001111) == 0b11110001);
 
 inline constexpr uint8_t crc_uint8(const uint8_t *const buffer,
-		  const std::size_t data_length, const Crc8Setting& settings) {
+      const std::size_t data_length, const Crc8Setting& settings) {
   uint8_t crc = settings.initial_value;
   /* calculates 8-Bit checksum with given polynomial */
   for (std::size_t current_byte = 0; current_byte < data_length; current_byte++) {

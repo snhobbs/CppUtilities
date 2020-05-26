@@ -2,13 +2,11 @@
  * Copyright 2020 Electrooptical Innovations
  * */
 
+#include <PIDFilters/PIDFilter.h>
 #include <gtest/gtest.h>
 #include <iostream>
 #include <vector>
 #include <cstdint>
-
-#define private public
-#include <PIDFilters/PIDFilter.h>
 
 const constexpr int32_t kSetPoint = 1000;
 
@@ -27,7 +25,7 @@ TEST(PIDADC, Proportional) {
     auto err = i - kSetPoint;
     auto cntrl = filter.RunProportional(i);
 
-    EXPECT_NEAR(cntrl, -((err * filter.coeffs_.mult_p) >> filter.coeffs_.shift_p), 1);
+    EXPECT_NEAR(cntrl, -((err * coeffs.mult_p) >> coeffs.shift_p), 1);
 
     // Extra sign checking ensuring negative feedback
     EXPECT_EQ(i <= kSetPoint, cntrl >= 0);
@@ -51,7 +49,7 @@ TEST(PIDADC, ProportionalSetLims) {
       auto err = i - set;
       auto cntrl = filter.RunProportional(i);
 
-      EXPECT_EQ(-(err * filter.coeffs_.mult_p) >> filter.coeffs_.shift_p,
+      EXPECT_EQ(-(err * coeffs.mult_p) >> coeffs.shift_p,
                   cntrl);
 
       // Extra sign checking ensuring negative feedback
@@ -83,7 +81,7 @@ TEST(PIDADC, SetLims) {
       if (integ <= 0 && i < set) {
         EXPECT_GT(cntrl, 0);
       } else if (integ >= 0 && i >= set) {
-        EXPECT_TRUE(cntrl <= 0);
+        EXPECT_LE(cntrl, 0);
       }
     }
   }

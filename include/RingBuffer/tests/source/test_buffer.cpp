@@ -5,17 +5,13 @@
  *  Created on: Jun 27, 2018
  *      Author: simon
  */
+#include "RingBuffer/RingBuffer.h"
 #include <gtest/gtest.h> 
 #include <algorithm>
 #include <iostream>
 #include <string>
 #include <vector>
 #include <cstdint>
-
-#define private public
-#define protected public
-#include "RingBuffer/RingBuffer.h"
-
 
 class RingBuffSetup: public ::testing::Test {
  public:
@@ -59,6 +55,11 @@ TEST_F(RingBuffSetup, Peek) {
   }
 }
 
+template<typename T>
+uint32_t MaskIndex(const T& buffer, uint32_t index) {
+  return (buffer.size() - 1) & index;
+}
+
 TEST_F(RingBuffSetup, PeekLong) {
   RingBuffer<uint32_t, kBuffSize> buff;
   std::vector<uint32_t> data{0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10,
@@ -77,45 +78,37 @@ TEST_F(RingBuffSetup, PeekLong) {
   EXPECT_EQ(false, buff.isEmpty());
   EXPECT_TRUE(buff.GetCount() == buff.GetSize());
 
-  {
+  for (std::size_t i = 0; i < buff.size(); i ++) {
     uint32_t dp = 0;
-
-    buff.peek(&dp, 0);
-    EXPECT_EQ(dp, buff.data[buff.MaskIndex(buff.GetHead())]);
-
-    buff.peek(&dp, 1);
-    EXPECT_EQ(dp, buff.data[buff.MaskIndex(buff.GetHead() - 1)]);
-
-    buff.peek(&dp, 2);
-    EXPECT_EQ(dp, buff.data[buff.MaskIndex(buff.GetHead() - 2)]);
-
-    buff.peek(&dp, buff.GetCount());
-    EXPECT_EQ(dp, *buff.data.begin()); // [buff.GetTail()]);
-  }
-
-  for (std::size_t i = 0; i <= buff.GetCount(); i++) {
-    uint32_t dp = 0;
-    buff.peek(&dp, i);
-    std::size_t index = buff.size() - i;
-    auto ltent = buff.data[buff.MaskIndex(static_cast<uint32_t>(index))];
-    EXPECT_EQ(dp, ltent);
+    buff.peek(&dp, buff.size() - i);
+    EXPECT_EQ(dp, long_data[i]);
   }
 }
 
 TEST_F(RingBuffSetup, InsertMulti) {
   RingBuffer<char, kBuffSize> buff;
   std::string txt = "Hello World, This is the test data";
-  std::string longTxt;
-  while (longTxt.size() < kBuffSize) {
-    longTxt.append(txt);
-  }
-  buff.insert(const_cast<char *>(longTxt.data()), kBuffSize); // Overruns!
+  std::string long_data;
 
-  for (std::size_t i = 0; i < buff.GetCount(); i++) {
-    char ch = '\0';
-    buff.peek(&ch, i);
-    EXPECT_EQ(ch, buff.data[buff.data.size() - i]);
+  while (long_data.size() < kBuffSize) {
+    long_data.append(txt);
   }
+  for (auto b : long_data) {
+    // count++;
+    buff.insert(b);
+  }
+
+  EXPECT_EQ(true, buff.isFull());
+  EXPECT_EQ(false, buff.isEmpty());
+  EXPECT_TRUE(buff.GetCount() == buff.GetSize());
+
+  for (std::size_t i = 0; i < buff.size(); i ++) {
+    char dp = '\0';
+    buff.peek(&dp, buff.size() - i);
+    EXPECT_EQ(dp, long_data[i]);
+  }
+
+  buff.insert(const_cast<char *>(long_data.data()), kBuffSize); // Overruns!
 }
 
 TEST_F(RingBuffSetup, InsertOverRun) {

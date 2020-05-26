@@ -1,8 +1,8 @@
 /*
  * Copyright 2020 Electrooptical Innovations
  * */
-#include "UnitTest++/UnitTest++.h"
 #include <Utilities/Crc.h>
+#include <gtest/gtest.h>
 #include <array>
 #include <iostream>
 #include <vector>

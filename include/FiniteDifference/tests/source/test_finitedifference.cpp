@@ -1,8 +1,22 @@
+/*
+ * Copyright 2020 Electrooptical Innovations
+ * */
+#include <FiniteDifference/FiniteDifference.h>
+#include <gtest/gtest.h>
 #include <vector>
 #include <iostream>
-#include <gtest/gtest.h>
-#define private public
-#include <FiniteDifference/FiniteDifference.h>
+
+class FiniteDifferenceTester : public SecFiniteDif {
+ public:
+  int32_t GetWindow(std::size_t index) {
+    assert(index < kWindowCount);
+    return windows[index];
+  }
+
+  explicit FiniteDifferenceTester(std::size_t boxcar_length) : SecFiniteDif{boxcar_length} {}
+};
+
+
 
 const int boxcarLen = 500/40;
 const int windowCount = 3;
@@ -31,32 +45,32 @@ TEST(FiniteDifferencer, Bootup) {
     }
 }
 
+
 TEST(FiniteDifferencer, Reset) {
-    SecFiniteDif sdiff{boxcarLen};
+    FiniteDifferenceTester sdiff{boxcarLen};
     while (sdiff.get_status() != BootStage::kDone) {
         sdiff.run(100);
     }
 
     EXPECT_TRUE(sdiff.get_status() == BootStage::kDone);
 
-    EXPECT_TRUE(sdiff.windows[0] != 0);
-    EXPECT_TRUE(sdiff.windows[1] != 0);
-    EXPECT_TRUE(sdiff.windows[2] != 0);
-    EXPECT_EQ(sdiff.windows[3], 0);
-
+    EXPECT_NE(sdiff.GetWindow(0), 0);
+    EXPECT_NE(sdiff.GetWindow(1), 0);
+    EXPECT_NE(sdiff.GetWindow(2), 0);
+    EXPECT_EQ(sdiff.GetWindow(3), 0);
 
     sdiff.reset();
     EXPECT_TRUE(sdiff.get_status() == BootStage::kWindow0);
     EXPECT_EQ(sdiff.get_newest_boxcar(), 0);
     EXPECT_EQ(sdiff.get_sfdiff(), 0);
 
-    EXPECT_EQ(sdiff.windows[0], 0);
-    EXPECT_EQ(sdiff.windows[1], 0);
-    EXPECT_EQ(sdiff.windows[2], 0);
+    EXPECT_EQ(sdiff.GetWindow(0), 0);
+    EXPECT_EQ(sdiff.GetWindow(1), 0);
+    EXPECT_EQ(sdiff.GetWindow(2), 0);
 }
 
 TEST(FiniteDifferencer, ConstValues) {
-    SecFiniteDif sdiff{boxcarLen};
+    FiniteDifferenceTester sdiff{boxcarLen};
     //  Test Const Value
 
     int16_t value = 500;
@@ -86,8 +100,7 @@ TEST(FiniteDifferencer, LinearValues) {
     constexpr int sWVal = GetAveIncreaseLineValue(start+boxcarLen*step, boxcarLen*step*2, boxcarLen);
     constexpr int tWVal = GetAveIncreaseLineValue(start+boxcarLen*step*2, boxcarLen*step*3, boxcarLen);
 
-
-    SecFiniteDif sdiff{boxcarLen};
+    FiniteDifferenceTester sdiff{boxcarLen};
 
     std::vector<int16_t> data;
     data.reserve(datasize);
@@ -105,11 +118,10 @@ TEST(FiniteDifferencer, LinearValues) {
         data.pop_back();
     }
 
-    EXPECT_EQ(fWVal, sdiff.windows[0]);
-    EXPECT_EQ(0, sdiff.windows[1]);
-    EXPECT_EQ(0, sdiff.windows[2]);
-    EXPECT_EQ(0, sdiff.windows[3]);
-
+    EXPECT_EQ(sdiff.GetWindow(0), fWVal);
+    EXPECT_EQ(sdiff.GetWindow(1), 0);
+    EXPECT_EQ(sdiff.GetWindow(2), 0);
+    EXPECT_EQ(sdiff.GetWindow(3), 0);
 
     value += boxcarLen * step;
     for (int i = 0; i < boxcarLen; i++) {
@@ -117,9 +129,9 @@ TEST(FiniteDifferencer, LinearValues) {
         data.pop_back();
     }
 
-    EXPECT_EQ(sWVal, sdiff.windows[1]);
-    EXPECT_EQ(0, sdiff.windows[2]);
-    EXPECT_EQ(0, sdiff.windows[3]);
+    EXPECT_EQ(sdiff.GetWindow(1), sWVal);
+    EXPECT_EQ(sdiff.GetWindow(2), 0);
+    EXPECT_EQ(sdiff.GetWindow(3), 0);
 
     value += boxcarLen * step;
     for (int i = 0; i < boxcarLen; i++) {
@@ -128,11 +140,12 @@ TEST(FiniteDifferencer, LinearValues) {
     }
 
     EXPECT_TRUE(sdiff.get_status() == BootStage::kDone);
-    EXPECT_EQ(0, sdiff.windows[3]);
+
+    EXPECT_EQ(sdiff.GetWindow(3), 0);
 
     value += boxcarLen * step;
 
-    EXPECT_EQ(tWVal, sdiff.windows[2]);
+    EXPECT_EQ(sdiff.GetWindow(2), tWVal);
     EXPECT_EQ(tWVal, sdiff.get_newest_boxcar());
     EXPECT_EQ(sdiff.get_sfdiff(), 0);  //  Entering a line, so the second diff should be 0
 }
@@ -146,7 +159,7 @@ TEST(FiniteDifferencer, ParabolicValues) {
     constexpr int gain = 4;
     constexpr int offset = 140;
 
-    SecFiniteDif sdiff{boxcarLen};
+    FiniteDifferenceTester sdiff{boxcarLen};
 
     //  constexpr auto getparabola = [](int i) {return gain*i*i + offset;};
     static_assert(getparabola(0, gain, offset) == offset, "getparabola");

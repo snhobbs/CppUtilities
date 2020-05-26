@@ -38,17 +38,19 @@ class RingBuffer final : public Buffer<T> {
   std::array<T, kElements> buffer_ ALIGNED(32){};
   ArrayView<T> data{buffer_.size(), buffer_.data()};
 
- protected:
   uint32_t head = 0;
   uint32_t tail = 0;
+
+ protected:
   static uint32_t MaskIndex(const uint32_t Index) {
     uint32_t out = Index & (kElements - 1);
     return out;
   }
+
+ public:
   uint32_t GetTail(void) const { return MaskIndex(tail); }
   uint32_t GetHead(void) const { return MaskIndex(head); }
 
- public:
   virtual bool isEmpty(void) const { return head == tail; }
   virtual bool isFull(void) const {
     return !isEmpty() && (GetHead() == GetTail());

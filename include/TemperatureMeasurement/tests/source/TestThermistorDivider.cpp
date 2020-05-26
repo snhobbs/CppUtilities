@@ -2,13 +2,12 @@
  * Copyright 2020 Electrooptical Innovations
  * */
 
-#include <gtest/gtest.h> 
-
-#include <iostream>
-#include <stdio.h>
-#define protected public
 #include <Calculators/ThermistorCalculator.h>
 #include <TemperatureMeasurement/ThermistorDivider.h>
+#include <gtest/gtest.h> 
+
+#include <cstdio>
+#include <iostream>
 
 class Thermistor : public ThermistorDividerBase {
  public:
@@ -41,9 +40,10 @@ class Thermistor : public ThermistorDividerBase {
 
   static constexpr int32_t GetMicroCelsiusFromAdcReading(uint32_t adc_reading) {
     return InterpolatePoint(
-        adc_reading,
-        FindClosestMatchingIndex(adc_reading, kTable.data(), kTable.size()),
-        kTable.data());
+        adc_reading, FindMatchingIndex(adc_reading), kTable.data());
+  }
+  static constexpr std::size_t FindMatchingIndex(std::size_t index) {
+     return FindClosestMatchingIndex(index, kTable.data(), kTable.size());
   }
 };
 
@@ -59,17 +59,17 @@ TEST(TableValues) {
 }
 #endif
 
-TEST(Thermistor, FindClosestMatchingIndex) {
+TEST(Thermistor, FindMatchingIndex) {
   Thermistor cont{};
 
   uint32_t last_index = std::numeric_limits<uint32_t>::max();
   for (int i = 0; i < (1 << Thermistor::kADCBits); i += 1) {
-    const auto index = cont.FindClosestMatchingIndex(i, cont.kTable.data(),
-                                                     cont.kTable.size());
+    const auto index = cont.FindMatchingIndex(i);
     EXPECT_TRUE(index <= last_index);
     last_index = index;
   }
 }
+
 
 TEST(Thermistor, TableMakerInterpolation) {
   Thermistor cont{};
@@ -84,8 +84,7 @@ TEST(Thermistor, TableMakerInterpolation) {
   uint32_t last_index = std::numeric_limits<uint32_t>::max();
   int32_t last_temp = cont.GetMicroCelsiusFromAdcReading(0);
   for (int i = 0; i < (1 << Thermistor::kADCBits); i += 1) {
-    const auto index = cont.FindClosestMatchingIndex(i, cont.kTable.data(),
-                                                     cont.kTable.size());
+    const auto index = cont.FindMatchingIndex(i);
     EXPECT_TRUE(index <= last_index);
     // printf("%d\n", index);
     const int32_t temp = cont.GetMicroCelsiusFromAdcReading(i);

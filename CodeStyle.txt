@@ -1,0 +1,16 @@
+Follow the Google open source CPP Guidelines
+Header blocks are ARM style:
+
+/* Copyright (C) 2010-2017 ARM Limited or its affiliates. All rights reserved.
+ * ----------------------------------------------------------------------
+ * Project:      CMSIS DSP Library
+ * Title:        arm_common_tables.h
+ * Description:  Extern declaration for common tables
+ *
+ * $Date:        27. January 2017
+ * $Revision:    V.1.5.1
+ *
+ * Target Processor: Cortex-M cores
+ * ----------------------------------------------------------------------
+ */
+

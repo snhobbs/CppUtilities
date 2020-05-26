@@ -114,12 +114,13 @@ protected:
     return array_size - 1;
   }
 
-  static constexpr uint32_t
-  FindClosestMatchingIndex(const int32_t adc_reading,
+  static constexpr std::size_t
+  FindClosestMatchingIndex(const std::size_t index,
                            const InterpolatedTemperatureLine *const table,
-                           const uint32_t array_size) {
+                           const std::size_t array_size) {
+    const int32_t adc_reading = static_cast<int32_t>(index);
     int32_t last_error = std::numeric_limits<int32_t>::max();
-    unsigned int i = 0;
+    std::size_t i = 0;
     for (i = 0; i < array_size; i++) {
       const int32_t err = table[i].adc_reading > adc_reading
                               ? table[i].adc_reading - adc_reading

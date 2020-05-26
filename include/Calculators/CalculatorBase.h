@@ -6,13 +6,13 @@
 #ifndef CALCULATORS_CALCULATORBASE_H_
 #define CALCULATORS_CALCULATORBASE_H_
 #include <Utilities/TypeConversion.h>
-#include <cassert>
-#include <cmath>
-#include <cstdint>
 #include <limits>
 #include <tuple>
 #include <type_traits>
 #include <utility>
+#include <cassert>
+#include <cmath>
+#include <cstdint>
 
 /**
  * Collection of the basic calculations needed for an embedded system
@@ -83,15 +83,15 @@ MultiplyShiftEstimate(const double value, const std::size_t multiplier_max,
   }
   const auto error = last_diff;
   const auto cast_error = Utilities::StaticCastQuickFail<T>(error);
-  if(value != abs_value) {
-	  mult *= -1;
+  if (value != abs_value) {
+    mult *= -1;
   }
   return MultiplyShiftEstimateResult<T>{mult, static_cast<T>(shift), cast_error};
 }
 } // namespace Utilities
 
 template <typename Output> class Calculator {
-public:
+ public:
   static const constexpr Output kMicroScaleFactor = 1000 * 1000;
   static const constexpr Output kMilliScaleFactor = 1000;
 
