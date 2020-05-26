@@ -5,7 +5,7 @@
  *  Created on: Jun 27, 2018
  *      Author: simon
  */
-#include "UnitTest++/UnitTest++.h"
+#include <gtest/gtest.h> 
 #include <algorithm>
 #include <iostream>
 #include <string>
@@ -16,24 +16,37 @@
 #define protected public
 #include "RingBuffer/RingBuffer.h"
 
-struct RingBuffSetup {
+
+class RingBuffSetup: public ::testing::Test {
+ public:
   static const std::size_t kBuffSize = 4096;
+  RingBuffSetup(void) {}
+  ~RingBuffSetup(void) {}
+  void SetUp(void) {
+      // code here will execute just before the test ensues 
+  }
+
+  void TearDown(void) {
+      // code here will be called just after the test completes
+      // ok to through exceptions from here if need be
+  }
 };
-TEST_FIXTURE(RingBuffSetup, Count) {
+
+TEST_F(RingBuffSetup, Count) {
   RingBuffer<char, kBuffSize> buff;
   for (std::size_t i = 0; i < kBuffSize * 5;) {
     i++;
     buff.insert(static_cast<char>((i + 1) & 0xff));
     if (i > buff.size()) {
-      CHECK_EQUAL(buff.size(), buff.GetCount());
-      CHECK(buff.isFull());
+      EXPECT_EQ(buff.size(), buff.GetCount());
+      EXPECT_TRUE(buff.isFull());
     } else {
-      CHECK_EQUAL(i, buff.GetCount());
+      EXPECT_EQ(i, buff.GetCount());
     }
   }
 }
 
-TEST_FIXTURE(RingBuffSetup, Peek) {
+TEST_F(RingBuffSetup, Peek) {
   RingBuffer<char, kBuffSize> buff;
   std::string txt = "Hello World, This is the test data";
   for (const char &b : txt) {
@@ -42,11 +55,11 @@ TEST_FIXTURE(RingBuffSetup, Peek) {
   for (std::size_t i = 0; i < buff.GetCount(); i++) {
     char ch = '\0';
     buff.peek(&ch, i);
-    CHECK_EQUAL(ch, txt[txt.size() - i]);
+    EXPECT_EQ(ch, txt[txt.size() - i]);
   }
 }
 
-TEST_FIXTURE(RingBuffSetup, PeekLong) {
+TEST_F(RingBuffSetup, PeekLong) {
   RingBuffer<uint32_t, kBuffSize> buff;
   std::vector<uint32_t> data{0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10,
                              11, 12, 13, 14, 15, 16, 17, 18, 19, 20};
@@ -60,24 +73,24 @@ TEST_FIXTURE(RingBuffSetup, PeekLong) {
     buff.insert(b);
   }
 
-  CHECK_EQUAL(true, buff.isFull());
-  CHECK_EQUAL(false, buff.isEmpty());
-  CHECK(buff.GetCount() == buff.GetSize());
+  EXPECT_EQ(true, buff.isFull());
+  EXPECT_EQ(false, buff.isEmpty());
+  EXPECT_TRUE(buff.GetCount() == buff.GetSize());
 
   {
     uint32_t dp = 0;
 
     buff.peek(&dp, 0);
-    CHECK_EQUAL(dp, buff.data[buff.MaskIndex(buff.GetHead())]);
+    EXPECT_EQ(dp, buff.data[buff.MaskIndex(buff.GetHead())]);
 
     buff.peek(&dp, 1);
-    CHECK_EQUAL(dp, buff.data[buff.MaskIndex(buff.GetHead() - 1)]);
+    EXPECT_EQ(dp, buff.data[buff.MaskIndex(buff.GetHead() - 1)]);
 
     buff.peek(&dp, 2);
-    CHECK_EQUAL(dp, buff.data[buff.MaskIndex(buff.GetHead() - 2)]);
+    EXPECT_EQ(dp, buff.data[buff.MaskIndex(buff.GetHead() - 2)]);
 
     buff.peek(&dp, buff.GetCount());
-    CHECK_EQUAL(dp, *buff.data.begin()); // [buff.GetTail()]);
+    EXPECT_EQ(dp, *buff.data.begin()); // [buff.GetTail()]);
   }
 
   for (std::size_t i = 0; i <= buff.GetCount(); i++) {
@@ -85,11 +98,11 @@ TEST_FIXTURE(RingBuffSetup, PeekLong) {
     buff.peek(&dp, i);
     std::size_t index = buff.size() - i;
     auto ltent = buff.data[buff.MaskIndex(static_cast<uint32_t>(index))];
-    CHECK_EQUAL(dp, ltent);
+    EXPECT_EQ(dp, ltent);
   }
 }
 
-TEST_FIXTURE(RingBuffSetup, InsertMulti) {
+TEST_F(RingBuffSetup, InsertMulti) {
   RingBuffer<char, kBuffSize> buff;
   std::string txt = "Hello World, This is the test data";
   std::string longTxt;
@@ -101,11 +114,11 @@ TEST_FIXTURE(RingBuffSetup, InsertMulti) {
   for (std::size_t i = 0; i < buff.GetCount(); i++) {
     char ch = '\0';
     buff.peek(&ch, i);
-    CHECK_EQUAL(ch, buff.data[buff.data.size() - i]);
+    EXPECT_EQ(ch, buff.data[buff.data.size() - i]);
   }
 }
 
-TEST_FIXTURE(RingBuffSetup, InsertOverRun) {
+TEST_F(RingBuffSetup, InsertOverRun) {
   RingBuffer<char, kBuffSize> buff;
   std::string txt = "Hello World, This is the test data";
   std::string longTxt;
@@ -116,7 +129,7 @@ TEST_FIXTURE(RingBuffSetup, InsertOverRun) {
     longTxt.append(txt);
   }
 
-  CHECK((longTxt.size()) > (kBuffSize));
+  EXPECT_TRUE((longTxt.size()) > (kBuffSize));
 
   for (auto &&ch : longTxt) {
     buff.insertOverwrite(std::move(ch));
@@ -124,11 +137,11 @@ TEST_FIXTURE(RingBuffSetup, InsertOverRun) {
   buff.pop(outTxt.data(), kBuffSize);
 
   for (std::size_t i = 0; i < outTxt.size(); i++) {
-    CHECK_EQUAL(outTxt[outTxt.size() - 1 - i], longTxt[longTxt.size() - 1 - i]);
+    EXPECT_EQ(outTxt[outTxt.size() - 1 - i], longTxt[longTxt.size() - 1 - i]);
   }
 }
 
-TEST_FIXTURE(RingBuffSetup, Pop) {
+TEST_F(RingBuffSetup, Pop) {
   RingBuffer<uint32_t, kBuffSize> buff;
   std::vector<uint32_t> long_data;
 
@@ -138,24 +151,24 @@ TEST_FIXTURE(RingBuffSetup, Pop) {
   }
 
   for (auto b : long_data) {
-    CHECK_EQUAL(false, buff.isFull());
+    EXPECT_EQ(false, buff.isFull());
     buff.insert(b);
   }
 
-  CHECK_EQUAL(true, buff.isFull());
-  CHECK_EQUAL(false, buff.isEmpty());
-  CHECK(buff.GetCount() == buff.GetSize());
+  EXPECT_EQ(true, buff.isFull());
+  EXPECT_EQ(false, buff.isEmpty());
+  EXPECT_TRUE(buff.GetCount() == buff.GetSize());
 
   std::reverse(long_data.begin(), long_data.end());
   while (!buff.isEmpty()) {
     uint32_t dp = 0;
     buff.pop(&dp);
-    CHECK_EQUAL(dp, long_data.back());
+    EXPECT_EQ(dp, long_data.back());
     long_data.pop_back();
   }
 }
 
-TEST_FIXTURE(RingBuffSetup, PopMulti) {
+TEST_F(RingBuffSetup, PopMulti) {
   RingBuffer<char, kBuffSize> buff;
   std::string txt = "Hello World, This is the test data";
   std::string longTxt;
@@ -168,6 +181,6 @@ TEST_FIXTURE(RingBuffSetup, PopMulti) {
   buff.insert(longTxt.c_str(), kBuffSize);
   buff.pop(outTxt.data(), kBuffSize);
   for (std::size_t i = 0; i < buff.GetCount(); i++) {
-    CHECK_EQUAL(outTxt[i], longTxt[i]);
+    EXPECT_EQ(outTxt[i], longTxt[i]);
   }
 }

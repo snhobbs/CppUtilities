@@ -2,6 +2,7 @@
  * Copyright 2020 Electrooptical Innovations
  * */
 #include "test_CooperativeScheduler.h"
+#include <gtest/gtest.h>
 #include <array>
 #include <iostream>
 #include <vector>
@@ -42,7 +43,7 @@ namespace SETTINGS {
 const uint32_t SysTickFrequency = 1000;
 }
 
-TEST(StaticTable) {
+TEST(CooperativeScheduler, StaticTable) {
   uint32_t SystemTime = 2;
   std::array<CooperativeTask, 7> Table{
       CooperativeTask{SETTINGS::SysTickFrequency / ReadADCInterval, SystemTime,

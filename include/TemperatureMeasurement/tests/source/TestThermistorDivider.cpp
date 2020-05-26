@@ -2,7 +2,7 @@
  * Copyright 2020 Electrooptical Innovations
  * */
 
-#include "UnitTest++/UnitTest++.h"
+#include <gtest/gtest.h> 
 
 #include <iostream>
 #include <stdio.h>
@@ -54,29 +54,29 @@ TEST(TableValues) {
   // need n-1 > n
 
   for (auto entry : cont.kTable) {
-    CHECK();
+    EXPECT_TRUE();
   }
 }
 #endif
 
-TEST(FindClosestMatchingIndex) {
+TEST(Thermistor, FindClosestMatchingIndex) {
   Thermistor cont{};
 
   uint32_t last_index = std::numeric_limits<uint32_t>::max();
   for (int i = 0; i < (1 << Thermistor::kADCBits); i += 1) {
     const auto index = cont.FindClosestMatchingIndex(i, cont.kTable.data(),
                                                      cont.kTable.size());
-    CHECK(index <= last_index);
+    EXPECT_TRUE(index <= last_index);
     last_index = index;
   }
 }
 
-TEST(TableMakerInterpolation) {
+TEST(Thermistor, TableMakerInterpolation) {
   Thermistor cont{};
 
   const int32_t kTempStep = 1e6;
   for (unsigned int i = 0; i < cont.kTable.size(); i++) {
-    CHECK_CLOSE(cont.kTable[i].t0,
+    EXPECT_NEAR(cont.kTable[i].t0,
                 cont.GetMicroCelsiusFromAdcReading(cont.kTable[i].adc_reading),
                 15);
   }
@@ -86,12 +86,12 @@ TEST(TableMakerInterpolation) {
   for (int i = 0; i < (1 << Thermistor::kADCBits); i += 1) {
     const auto index = cont.FindClosestMatchingIndex(i, cont.kTable.data(),
                                                      cont.kTable.size());
-    CHECK(index <= last_index);
+    EXPECT_TRUE(index <= last_index);
     // printf("%d\n", index);
     const int32_t temp = cont.GetMicroCelsiusFromAdcReading(i);
     // cout << i << "\t" << cont.GetTemperatureInMicroCelsius(i) << endl;
-    CHECK(temp <= last_temp);
-    CHECK_CLOSE(temp, last_temp, kTempStep);
+    EXPECT_TRUE(temp <= last_temp);
+    EXPECT_NEAR(temp, last_temp, kTempStep);
     if (temp > last_temp) {
       printf("%d\t%d\t%d\t%d\t%u\n", i, temp, last_temp, index, last_index);
     }

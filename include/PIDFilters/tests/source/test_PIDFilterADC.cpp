@@ -2,7 +2,7 @@
  * Copyright 2020 Electrooptical Innovations
  * */
 
-#include "UnitTest++/UnitTest++.h"
+#include <gtest/gtest.h>
 #include <iostream>
 #include <vector>
 #include <cstdint>
@@ -12,7 +12,7 @@
 
 const constexpr int32_t kSetPoint = 1000;
 
-TEST(PIDADCProportional) {
+TEST(PIDADC, Proportional) {
   // search over the whole range of a uint_12 checking the sign and value of the
   // proportional error
   const constexpr int32_t kShiftp = 6;
@@ -27,16 +27,15 @@ TEST(PIDADCProportional) {
     auto err = i - kSetPoint;
     auto cntrl = filter.RunProportional(i);
 
-    CHECK_CLOSE(cntrl,
-                -((err * filter.coeffs_.mult_p) >> filter.coeffs_.shift_p), 1);
+    EXPECT_NEAR(cntrl, -((err * filter.coeffs_.mult_p) >> filter.coeffs_.shift_p), 1);
 
     // Extra sign checking ensuring negative feedback
-    CHECK_EQUAL(i <= kSetPoint, cntrl >= 0);
-    CHECK_EQUAL(i > kSetPoint, cntrl < 0);
+    EXPECT_EQ(i <= kSetPoint, cntrl >= 0);
+    EXPECT_EQ(i > kSetPoint, cntrl < 0);
   }
 }
 
-TEST(PIDADCProportionalSetLims) {
+TEST(PIDADC, ProportionalSetLims) {
   // search over the whole range of a uint_12 checking the sign and value of the
   // proportional error
   PIFilterCoeffs coeffs{0, 0, 1, 1};
@@ -52,17 +51,17 @@ TEST(PIDADCProportionalSetLims) {
       auto err = i - set;
       auto cntrl = filter.RunProportional(i);
 
-      CHECK_EQUAL(-(err * filter.coeffs_.mult_p) >> filter.coeffs_.shift_p,
+      EXPECT_EQ(-(err * filter.coeffs_.mult_p) >> filter.coeffs_.shift_p,
                   cntrl);
 
       // Extra sign checking ensuring negative feedback
-      CHECK_EQUAL(i <= set, cntrl >= 0);
-      CHECK_EQUAL(i > set, cntrl < 0);
+      EXPECT_EQ(i <= set, cntrl >= 0);
+      EXPECT_EQ(i > set, cntrl < 0);
     }
   }
 }
 
-TEST(PIDADCSetLims) {
+TEST(PIDADC, SetLims) {
   // search over the whole range of a uint_12 checking the sign and value of the
   // proportional error
   PIFilterCoeffs coeffs{0, 0, 1, 1};
@@ -82,9 +81,9 @@ TEST(PIDADCSetLims) {
       // else if int and prop >= 0 cntrl <=0
       auto integ = filter.GetIntegralValue();
       if (integ <= 0 && i < set) {
-        CHECK(cntrl > 0);
+        EXPECT_GT(cntrl, 0);
       } else if (integ >= 0 && i >= set) {
-        CHECK(cntrl <= 0);
+        EXPECT_TRUE(cntrl <= 0);
       }
     }
   }

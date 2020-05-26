@@ -2,7 +2,7 @@
  * Copyright 2020 Electrooptical Innovations
  * */
 
-#include "UnitTest++/UnitTest++.h"
+#include <gtest/gtest.h>
 #include <PIDFilters/ControllerBase.h>
 #include <PIDFilters/DelayIntegratorPlantModel.h>
 #include <PIDFilters/PICalculator.h>
@@ -10,7 +10,7 @@
 #include <vector>
 #include <cstdint>
 namespace {
-TEST(runner) {
+TEST(PIDFilter, runner) {
   const constexpr double kDelaySeconds = 1.1;
   const constexpr double kDegreesPerSecondPerAmp = 0.6;
   const constexpr int32_t update_rate = 100;
@@ -27,7 +27,7 @@ TEST(runner) {
 
   ControllerBase controller{set_point, coeffs, lims};
   PI_Filter_Status status;
-  for (int i = 0; i < 20 * update_rate; i++) {
+  for (int i = 0; i < 200 * update_rate; i++) {
     const int32_t temp = static_cast<int32_t>(plant.GetTemperature());
     auto control = static_cast<double>(controller.RunFilter(temp, false));
     plant.CalculateStep(control);
@@ -35,5 +35,6 @@ TEST(runner) {
     // std::cout << i << "\tTemp: " << temp << "\t Control: " << control << "\t"
     //          << std::endl;
   }
+  EXPECT_NEAR(set_point, plant.GetTemperature(), 10000);
 }
 }  //  namespace

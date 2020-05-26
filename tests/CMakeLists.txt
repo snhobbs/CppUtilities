@@ -101,14 +101,14 @@ target_link_libraries( tests asan)
 target_link_libraries( tests ubsan)
 #target_link_libraries( tests msan)
 
-find_package(UnitTest++ QUIET)
-target_link_libraries(tests UnitTest++)
+find_package(gtest QUIET)
+target_link_libraries(tests gtest)
+target_link_libraries(tests pthread)
 
 target_include_directories(tests PUBLIC ${TESTSRC})
 target_include_directories(tests PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 message(STATUS "Sources: ${DIR_SRCS}")
-set(EmbeddedCMake_DIR /home/simon/EmbeddedCMake)
 include(${EmbeddedCMake_DIR}/source/Utilities.cmake)
 GetStaticAnalysisFiles(tests "")
 add_test(NAME ${CMAKE_SOURCE_DIR} COMMAND tests)

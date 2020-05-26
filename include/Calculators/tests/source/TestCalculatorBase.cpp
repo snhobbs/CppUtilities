@@ -1,7 +1,7 @@
 /*
  * Copyright 2020 Electrooptical Innovations
  * */
-#include "UnitTest++/UnitTest++.h"
+#include <gtest/gtest.h> 
 #include <Calculators/CalculatorBase.h>
 #include <cassert>
 #include <cstdint>
@@ -13,7 +13,7 @@
 #define PRINT(x)                                                               \
   { std::cout << x << "\n"; }
 
-TEST(ScaleDigitalValue) {
+TEST(Calculator, ScaleDigitalValue) {
   const uint32_t kBits = 18;
   double kScaleHigh[]{3.3e6, 5e6, 15e6};
   double kScaleLow[]{0, -5e6, -15e6};
@@ -23,15 +23,15 @@ TEST(ScaleDigitalValue) {
       for (uint32_t i = 0; i < (1 << kBits); i++) {
         int64_t value = Calculator<int64_t>::ScaleDigitalValue<int64_t>(
             i, kBits, static_cast<int64_t>(low), static_cast<int64_t>(high));
-        CHECK(value > last);
+        EXPECT_GT(value, last);
         last = value;
       }
-      CHECK_CLOSE(last, high, 200);
+      EXPECT_NEAR(last, high, 200);
     }
   }
 }
 
-TEST(ScaleToDigitalValue) {
+TEST(Calculator, ScaleToDigitalValue) {
   const uint32_t kBits = 16;
   double kScaleHigh[]{3.3e6, 5e6, 15e6};
   double kScaleLow[]{0, -5e6, -15e6};
@@ -43,13 +43,13 @@ TEST(ScaleToDigitalValue) {
         int64_t scaled = Calculator<int64_t>::ScaleToDigitalValue<int64_t>(
             value, kBits, static_cast<int64_t>(low), static_cast<int64_t>(high));
 
-        CHECK_EQUAL(i, scaled);
+        EXPECT_EQ(i, scaled);
       }
     }
   }
 }
 #if 0
-TEST(ScaleToDigitalValuePrint) {
+TEST(Calculator, ScaleToDigitalValuePrint) {
   const uint32_t kBits = 12;
   double kScaleHigh[]{3.3e6};
   double kScaleLow[]{0};
@@ -61,7 +61,7 @@ TEST(ScaleToDigitalValuePrint) {
         int64_t scaled = Calculator<int64_t>::ScaleToDigitalValue<int64_t>(
             value, kBits, low, high);
 
-        CHECK_EQUAL(i, scaled);
+        EXPECT_EQ(i, scaled);
         std::cout << i << "\t" << value << "\t" << scaled << "\n";
       }
     }
@@ -69,7 +69,7 @@ TEST(ScaleToDigitalValuePrint) {
 }
 #endif
 
-TEST(TestMultipyShiftEstimate) {
+TEST(Calculator, MultipyShiftEstimate) {
   int kShiftMax = 16;
   double kMultMax = (1 << 16);
   double values[] = {-100,   -0.22222, 0.111199,  0,        0.1,
@@ -78,14 +78,14 @@ TEST(TestMultipyShiftEstimate) {
     auto out = Utilities::MultiplyShiftEstimate<int32_t>(pt, kMultMax, kShiftMax);
     //std::cout << pt << "\t" << out.error << "\n";
     if (pt != 0) {
-      CHECK(static_cast<double>(out.error)/pt < 1e5);
+      EXPECT_LT(static_cast<double>(out.error)/pt, 1e5);
     } else {
-      CHECK(out.error < 1e5);
+      EXPECT_LT(out.error, 1e5);
     }
   }
 }
 
-TEST(TwoNodeVoltageDivider) {
+TEST(Calculator, TwoNodeVoltageDivider) {
   // TwoNodeVoltageDivider(const ValueType value, const Input fixed_value, const
   // Input fixed_resistor, const Input input_resistor, const Output kScale = 1,
   // const Output kValueScale = 1){
@@ -100,14 +100,14 @@ TEST(TwoNodeVoltageDivider) {
   for (auto pt : cases) {
     double out = Calculator<double>::TwoNodeVoltageDivider<double>(
         std::get<0>(pt), std::get<1>(pt), std::get<2>(pt), std::get<3>(pt));
-    CHECK_CLOSE(std::get<4>(pt), out, 1e-12);
+    EXPECT_NEAR(std::get<4>(pt), out, 1e-12);
     double v2 = Calculator<double>::TwoNodeVoltageDividerReverse<double>(
         std::get<0>(pt), std::get<4>(pt), std::get<2>(pt), std::get<3>(pt));
-    CHECK_CLOSE(std::get<1>(pt), v2, 1e-12);
+    EXPECT_NEAR(std::get<1>(pt), v2, 1e-12);
   }
 }
 
-TEST(ThreeNodeVoltageDivider) {
+TEST(Calculator, ThreeNodeVoltageDivider) {
   std::vector<
       std::tuple<double, double, double, double, double, double, double>>
       cases{
@@ -120,15 +120,15 @@ TEST(ThreeNodeVoltageDivider) {
     double out = Calculator<double>::ThreeNodeVoltageDivider<double>(
         std::get<0>(pt), std::get<1>(pt), std::get<2>(pt), std::get<3>(pt),
         std::get<4>(pt), std::get<5>(pt));
-    CHECK_CLOSE(std::get<6>(pt), out, 1e-12);
+    EXPECT_NEAR(std::get<6>(pt), out, 1e-12);
     double v3 = Calculator<double>::ThreeNodeVoltageDividerReversed<double>(
         std::get<0>(pt), std::get<1>(pt), std::get<6>(pt), std::get<3>(pt),
         std::get<4>(pt), std::get<5>(pt));
-    CHECK_CLOSE(std::get<2>(pt), v3, 1e-12);
+    EXPECT_NEAR(std::get<2>(pt), v3, 1e-12);
   }
 }
 
-TEST(ThreeNodeVoltageDividerReversed) {
+TEST(Calculator, ThreeNodeVoltageDividerReversed) {
   constexpr double node_value = 1; // 1v
   double node_a_value = 0;         // gnd
   constexpr double node_a_resistor = 11e3;
@@ -144,11 +144,11 @@ TEST(ThreeNodeVoltageDividerReversed) {
   double high = Calculator<double>::ThreeNodeVoltageDividerReversed<double>(
       node_a_value, node_b_value_low, node_value, node_a_resistor,
       node_b_resistor, output_fb_resistor);
-  CHECK_CLOSE(0.2, low, 0.05);
-  CHECK_CLOSE(6, high, 0.5);
+  EXPECT_NEAR(0.2, low, 0.05);
+  EXPECT_NEAR(6, high, 0.5);
 }
 
-TEST(InvertingAmplifier) {
+TEST(Calculator, InvertingAmplifier) {
   double noninverting_value = 5;
   double resistor_in = 2e5;
   double fb_resistor = 18e5;
@@ -167,13 +167,13 @@ TEST(InvertingAmplifier) {
     if (output >= high || output <= low) {
       continue;
     }
-    CHECK_CLOSE(inverting_value, input_calculated, 0.0001);
-    CHECK(output < last);
+    EXPECT_NEAR(inverting_value, input_calculated, 0.0001);
+    EXPECT_LT(output, last);
     last = output;
   }
 }
 
-TEST(NonInvertingAmplifier) {
+TEST(Calculator, NonInvertingAmplifier) {
   double inverting_value = 5;
   double resistor_in = 2e5;
   double fb_resistor = 18e5;
@@ -191,8 +191,8 @@ TEST(NonInvertingAmplifier) {
             double>(inverting_value, output, resistor_in, fb_resistor);
     if (output >= high || output <= low)
       continue;
-    CHECK_CLOSE(noninverting_value, input_calculated, 0.0001);
-    CHECK(output > last);
+    EXPECT_NEAR(noninverting_value, input_calculated, 0.0001);
+    EXPECT_GT(output, last);
     last = output;
   }
 }

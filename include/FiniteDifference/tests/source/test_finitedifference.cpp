@@ -1,61 +1,61 @@
 #include <vector>
 #include <iostream>
-#include "UnitTest++/UnitTest++.h"
+#include <gtest/gtest.h>
 #define private public
 #include <FiniteDifference/FiniteDifference.h>
 
 const int boxcarLen = 500/40;
 const int windowCount = 3;
-TEST(Bootup) {
+TEST(FiniteDifferencer, Bootup) {
 
     //std::vector<int16_t> data;
     //data.reserve(1024);
 
     SecFiniteDif sdiff{boxcarLen};
 
-    CHECK(sdiff.get_status() == BootStage::kWindow0);
+    EXPECT_TRUE(sdiff.get_status() == BootStage::kWindow0);
     for (int i = 0; i < boxcarLen; i++) {
         sdiff.run(500);
     }
 
-    CHECK(sdiff.get_status() == BootStage::kWindow1);
+    EXPECT_TRUE(sdiff.get_status() == BootStage::kWindow1);
 
     for (int i = 0; i < boxcarLen; i++) {
         sdiff.run(500);
     }
 
-    CHECK(sdiff.get_status() == BootStage::kWindow2);
+    EXPECT_TRUE(sdiff.get_status() == BootStage::kWindow2);
 
     for (int i = 0; i < boxcarLen; i++) {
         sdiff.run(500);
     }
 }
 
-TEST(Reset) {
+TEST(FiniteDifferencer, Reset) {
     SecFiniteDif sdiff{boxcarLen};
     while (sdiff.get_status() != BootStage::kDone) {
         sdiff.run(100);
     }
 
-    CHECK(sdiff.get_status() == BootStage::kDone);
+    EXPECT_TRUE(sdiff.get_status() == BootStage::kDone);
 
-    CHECK(sdiff.windows[0] != 0);
-    CHECK(sdiff.windows[1] != 0);
-    CHECK(sdiff.windows[2] != 0);
-    CHECK_EQUAL(sdiff.windows[3], 0);
+    EXPECT_TRUE(sdiff.windows[0] != 0);
+    EXPECT_TRUE(sdiff.windows[1] != 0);
+    EXPECT_TRUE(sdiff.windows[2] != 0);
+    EXPECT_EQ(sdiff.windows[3], 0);
 
 
     sdiff.reset();
-    CHECK(sdiff.get_status() == BootStage::kWindow0);
-    CHECK_EQUAL(sdiff.get_newest_boxcar(), 0);
-    CHECK_EQUAL(sdiff.get_sfdiff(), 0);
+    EXPECT_TRUE(sdiff.get_status() == BootStage::kWindow0);
+    EXPECT_EQ(sdiff.get_newest_boxcar(), 0);
+    EXPECT_EQ(sdiff.get_sfdiff(), 0);
 
-    CHECK_EQUAL(sdiff.windows[0], 0);
-    CHECK_EQUAL(sdiff.windows[1], 0);
-    CHECK_EQUAL(sdiff.windows[2], 0);
+    EXPECT_EQ(sdiff.windows[0], 0);
+    EXPECT_EQ(sdiff.windows[1], 0);
+    EXPECT_EQ(sdiff.windows[2], 0);
 }
 
-TEST(ConstValues) {
+TEST(FiniteDifferencer, ConstValues) {
     SecFiniteDif sdiff{boxcarLen};
     //  Test Const Value
 
@@ -64,8 +64,8 @@ TEST(ConstValues) {
         sdiff.run(value);
     }
 
-    CHECK_EQUAL(sdiff.get_newest_boxcar(), value * boxcarLen);
-    CHECK_EQUAL(sdiff.get_sfdiff(), 0);
+    EXPECT_EQ(sdiff.get_newest_boxcar(), value * boxcarLen);
+    EXPECT_EQ(sdiff.get_sfdiff(), 0);
 }
 
 constexpr int GetAveIncreaseLineValue(int start, int finish, int averages) {
@@ -76,7 +76,7 @@ constexpr int GetAveLineValue(int start, int step, int averages) {
     return start*averages + (step*averages)/2;
 }
 
-TEST(LinearValues) {
+TEST(FiniteDifferencer, LinearValues) {
     //  Enter a line of slope step and offset 0
     constexpr int step = 4;
     const int datasize = 1024;
@@ -97,7 +97,7 @@ TEST(LinearValues) {
       data.push_back(value);  //  lowest value ready to be popped
     }
 
-    CHECK_EQUAL(data.back(), start);
+    EXPECT_EQ(data.back(), start);
 
     int value = 0;
     for (int i = 0; i < boxcarLen; i++) {
@@ -105,10 +105,10 @@ TEST(LinearValues) {
         data.pop_back();
     }
 
-    CHECK_EQUAL(fWVal, sdiff.windows[0]);
-    CHECK_EQUAL(0, sdiff.windows[1]);
-    CHECK_EQUAL(0, sdiff.windows[2]);
-    CHECK_EQUAL(0, sdiff.windows[3]);
+    EXPECT_EQ(fWVal, sdiff.windows[0]);
+    EXPECT_EQ(0, sdiff.windows[1]);
+    EXPECT_EQ(0, sdiff.windows[2]);
+    EXPECT_EQ(0, sdiff.windows[3]);
 
 
     value += boxcarLen * step;
@@ -117,9 +117,9 @@ TEST(LinearValues) {
         data.pop_back();
     }
 
-    CHECK_EQUAL(sWVal, sdiff.windows[1]);
-    CHECK_EQUAL(0, sdiff.windows[2]);
-    CHECK_EQUAL(0, sdiff.windows[3]);
+    EXPECT_EQ(sWVal, sdiff.windows[1]);
+    EXPECT_EQ(0, sdiff.windows[2]);
+    EXPECT_EQ(0, sdiff.windows[3]);
 
     value += boxcarLen * step;
     for (int i = 0; i < boxcarLen; i++) {
@@ -127,21 +127,21 @@ TEST(LinearValues) {
         data.pop_back();
     }
 
-    CHECK(sdiff.get_status() == BootStage::kDone);
-    CHECK_EQUAL(0, sdiff.windows[3]);
+    EXPECT_TRUE(sdiff.get_status() == BootStage::kDone);
+    EXPECT_EQ(0, sdiff.windows[3]);
 
     value += boxcarLen * step;
 
-    CHECK_EQUAL(tWVal, sdiff.windows[2]);
-    CHECK_EQUAL(tWVal, sdiff.get_newest_boxcar());
-    CHECK_EQUAL(sdiff.get_sfdiff(), 0);  //  Entering a line, so the second diff should be 0
+    EXPECT_EQ(tWVal, sdiff.windows[2]);
+    EXPECT_EQ(tWVal, sdiff.get_newest_boxcar());
+    EXPECT_EQ(sdiff.get_sfdiff(), 0);  //  Entering a line, so the second diff should be 0
 }
 
 constexpr int getparabola(int i, int gain, int offset) {
     return i*i*gain+offset;
 }
 
-TEST(ParabolicValues) {
+TEST(FiniteDifferencer, ParabolicValues) {
     //  Enter a parabola gain*x**2 + offset
     constexpr int gain = 4;
     constexpr int offset = 140;
@@ -166,7 +166,7 @@ TEST(ParabolicValues) {
         sdiff.run(value);
     }
 
-    CHECK(sdiff.get_status() == BootStage::kDone);
+    EXPECT_TRUE(sdiff.get_status() == BootStage::kDone);
 
-    CHECK_EQUAL(2*gain*boxcarLen*boxcarLen*boxcarLen, sdiff.get_sfdiff());  //  Entering a parabola, so the second diff should be the gain
+    EXPECT_EQ(2*gain*boxcarLen*boxcarLen*boxcarLen, sdiff.get_sfdiff());  //  Entering a parabola, so the second diff should be the gain
 }

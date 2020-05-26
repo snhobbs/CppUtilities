@@ -6,13 +6,13 @@
  *      Author: simon
  */
 #if 1
+#include <gtest/gtest.h> 
 #include <RingBuffer/RingBuffer.h>
 #include <array>
 #include <string>
 #include <iostream>
-#include "UnitTest++/UnitTest++.h"
 
-struct RingBufferSetup {
+struct RingBufferSetup : public ::testing::Test {
   const std::string chars =
     "abcbefghijklmnopqrstuvwx1234567890abcbefghijklmnopqrstuvwx1234567890";
   static const constexpr std::size_t Size{(1 << 10)};
@@ -27,7 +27,7 @@ struct RingBufferSetup {
 
   RingBuffer<char, ksize> rb;
 };
-TEST_FIXTURE(RingBufferSetup, RB_PopSingle) {
+TEST_F(RingBufferSetup, RB_PopSingle) {
   std::string longstr;
   fillStr(&longstr, 3 * rb.size());
 
@@ -36,11 +36,11 @@ TEST_FIXTURE(RingBufferSetup, RB_PopSingle) {
   for (auto d : chars) {
     rb.insert(d);
     rb.pop(&out);
-    CHECK_EQUAL(static_cast<std::size_t>(d), static_cast<std::size_t>(out));
+    EXPECT_EQ(static_cast<std::size_t>(d), static_cast<std::size_t>(out));
   }
 }
 
-TEST_FIXTURE(RingBufferSetup, RB_InsertSingle) {
+TEST_F(RingBufferSetup, RB_InsertSingle) {
   // Insert too much  and ensure the output is truncated as expected
   std::string longstr;
   fillStr(&longstr, 3 * rb.size());
@@ -58,13 +58,13 @@ TEST_FIXTURE(RingBufferSetup, RB_InsertSingle) {
   }
   cnt = 0;
   for (auto d : dout) {
-    CHECK_EQUAL(static_cast<std::size_t>(longstr[cnt]), static_cast<std::size_t>(d));
+    EXPECT_EQ(static_cast<std::size_t>(longstr[cnt]), static_cast<std::size_t>(d));
     cnt++;
   }
 }
 
 # if 1
-TEST_FIXTURE(RingBufferSetup, RB_Peek) {
+TEST_F(RingBufferSetup, RB_Peek) {
   std::string longstr;
   fillStr(&longstr, 3 * rb.size());
 
@@ -75,28 +75,28 @@ TEST_FIXTURE(RingBufferSetup, RB_Peek) {
   for (std::size_t i = 0; i < rb.GetCount(); i++) {
     char out = 0;
     rb.peek(&out, rb.GetCount()-i);
-    CHECK_EQUAL(out, longstr[i]);
+    EXPECT_EQ(out, longstr[i]);
   }
 }
 #endif
-TEST_FIXTURE(RingBufferSetup, RB_InsertMulti) {
+TEST_F(RingBufferSetup, RB_InsertMulti) {
   std::string longstr;
   fillStr(&longstr, 3 * rb.size());
 
   auto bytes = rb.insert(longstr.data(), longstr.size());
 
-  CHECK_EQUAL(bytes, rb.GetCount()); // The amount filled is the amount reported
-  CHECK_EQUAL(bytes, rb.size());   // The entire data buffer is filled
+  EXPECT_EQ(bytes, rb.GetCount()); // The amount filled is the amount reported
+  EXPECT_EQ(bytes, rb.size());   // The entire data buffer is filled
 
   for (std::size_t i = 0; i < rb.GetCount(); i++) {
     char out = 0;
     rb.peek(&out, rb.GetCount() - i);
-    CHECK_EQUAL(out, longstr[i]); // Each of the values matches
+    EXPECT_EQ(out, longstr[i]); // Each of the values matches
   }
 }
 
 #if 1
-TEST_FIXTURE(RingBufferSetup, RB_PopMulti) {
+TEST_F(RingBufferSetup, RB_PopMulti) {
   std::string longstr;
   fillStr(&longstr, 3 * rb.size());
 
@@ -105,12 +105,12 @@ TEST_FIXTURE(RingBufferSetup, RB_PopMulti) {
   rb.pop(dout.data(), bytes);
 
   for (std::size_t i = 0; i < dout.size(); i++) {
-    CHECK_EQUAL(dout[i], longstr[i]);
+    EXPECT_EQ(dout[i], longstr[i]);
   }
 }
 #endif
 #if 1
-TEST_FIXTURE(RingBufferSetup, RB_InsertOverRun) {
+TEST_F(RingBufferSetup, RB_InsertOverRun) {
   std::string longstr;
   fillStr(&longstr, 3 * rb.size());
 
@@ -119,14 +119,14 @@ TEST_FIXTURE(RingBufferSetup, RB_InsertOverRun) {
     bytes += rb.insertOverwrite(ch);
   }
 
-  CHECK_EQUAL(bytes, longstr.size());
+  EXPECT_EQ(bytes, longstr.size());
 
   rb.pop(dout.data(), bytes);
 
   for (std::size_t i = 0; i < dout.size(); i++) {
-    CHECK_EQUAL(dout[dout.size() - 1 - i], longstr[longstr.size() - 1 - i]);
+    EXPECT_EQ(dout[dout.size() - 1 - i], longstr[longstr.size() - 1 - i]);
   }
-  CHECK(dout.size() < longstr.size());
+  EXPECT_TRUE(dout.size() < longstr.size());
 }
 #endif
 

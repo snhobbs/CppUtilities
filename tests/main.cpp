@@ -6,22 +6,18 @@
  *      Author: simon
  */
 
-#include "UnitTest++/UnitTest++.h"
-
+#include <gtest/gtest.h>
 #include <stdint.h>
 #include <array>
 #include <iostream>
 #include <vector>
-TEST(Sanity) { CHECK_EQUAL(1, 1); }
+TEST(Sanity, Check) { ASSERT_EQ(1, 1); }
 
-int main(void) {
-  auto ret = UnitTest::RunAllTests();
-
+int main(int argc, char* argv[]) {
+  testing::InitGoogleTest(&argc, argv);
+  for (auto i = 0; i < argc; i++) {
+    std::cout << argv[i] << '\n';
+  }
   std::cout << "Compiled: " << __TIME__ << '\t' << __DATE__ << std::endl;
-#if 0
-	for(auto i = 0; i < argc; i++) {
-		std::cout << argv[i] << '\n';
-	}
-#endif
-  return ret;
+  return RUN_ALL_TESTS();
 }
