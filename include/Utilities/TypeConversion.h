@@ -7,7 +7,6 @@
 #ifndef UTILITIES_TYPECONVERSION_H_
 #define UTILITIES_TYPECONVERSION_H_
 
-//  #include <SerialCommParser/EOISerial++/SerialCommClient.h>
 //  #include <ArrayView/ArrayView.h>
 #include <array>
 #include <limits>
@@ -82,20 +81,48 @@ inline uint16_t
 Make_LSB_uint16tFromu8Array(const T &data) {
   return Make_LSB_uint16_tFromU8Array(data);
 }
+template<typename T, typename U>
+inline constexpr T
+Make_LSB_IntegerTypeFromArray(const U *const data,
+                             const std::size_t data_length) {
+  static_assert(std::is_integral<T>());
+  static_assert(std::is_integral<U>());
+  assert(sizeof(T) >= data_length*sizeof(U));
+  if (data_length > sizeof(T)*sizeof(U)) {
+    return 0;
+  }
+
+  T out = 0;
+  const constexpr std::size_t kDataSizeInBits = 8 * sizeof(U);
+  for (std::size_t i = 0; i < data_length; i++) {
+    std::size_t shift = (i) * kDataSizeInBits;
+    out += static_cast<T>((data[i] << shift));
+  }
+  return out;
+}
 
 template<typename T>
 inline constexpr T
 Make_LSB_IntegerTypeFromU8Array(const uint8_t *const data,
                              const std::size_t data_length) {
+  return Make_LSB_IntegerTypeFromArray<T, uint8_t>(data, data_length);
+}
+
+template<typename T, typename U>
+inline constexpr T
+Make_MSB_IntegerTypeFromArray(const U *const data,
+                             const std::size_t data_length) {
   static_assert(std::is_integral<T>());
-  //  first byte is shifted by 24 etc
-  assert(sizeof(T) >= data_length);
-  if (data_length > sizeof(T))
+  static_assert(std::is_integral<U>());
+  assert(sizeof(T) >= data_length*sizeof(U));
+  if (data_length > sizeof(T)*sizeof(U)) {
     return 0;
+  }
+
   T out = 0;
-  const constexpr std::size_t kByteSizeInBits = 8;
+  const constexpr std::size_t kDataSizeInBits = 8 * sizeof(U);
   for (std::size_t i = 0; i < data_length; i++) {
-    std::size_t shift = (i) * kByteSizeInBits;
+    std::size_t shift = ((data_length - 1) - i) * kDataSizeInBits;
     out += static_cast<T>((data[i] << shift));
   }
   return out;
@@ -105,18 +132,7 @@ template<typename T>
 inline constexpr T
 Make_MSB_IntegerTypeFromU8Array(const uint8_t *const data,
                              const std::size_t data_length) {
-  static_assert(std::is_integral<T>());
-  //  first byte is shifted by 24 etc
-  assert(sizeof(T) >= data_length);
-  if (data_length > sizeof(T))
-    return 0;
-  T out = 0;
-  const constexpr std::size_t kByteSizeInBits = 8;
-  for (std::size_t i = 0; i < data_length; i++) {
-    std::size_t shift = ((data_length - 1) - i) * kByteSizeInBits;
-    out += static_cast<T>((data[i] << shift));
-  }
-  return out;
+  return Make_MSB_IntegerTypeFromArray<T, uint8_t>(data, data_length);
 }
 
 
@@ -195,11 +211,27 @@ inline constexpr std::array<uint8_t, sizeof(T)> MakeLSBU8Array(T t) {
   return MakeLSBU8Array<T, sizeof(T)>(t);
 }
 
+template <typename T, std::size_t kBytes>
+inline constexpr std::array<uint8_t, kBytes> MakeMSBU8Array(T t) {
+  static_assert(kBytes >= sizeof(T), "Type size issue");
+  std::array<uint8_t, kBytes> return_array{};
+  for (std::size_t byte = 0; byte < kBytes; byte++) {
+    return_array[kBytes - byte - 1] = Utilities::GetByte(t, byte);
+  }
+  return return_array;
+}
+
+template <typename T>
+inline constexpr std::array<uint8_t, sizeof(T)> MakeMSBU8Array(T t) {
+  return MakeMSBU8Array<T, sizeof(T)>(t);
+}
+
+#if 0
 template <typename T>
 inline constexpr const std::array<uint8_t, sizeof(uint32_t)>
 MakeMSBU8Array(T t) {
   static_assert(sizeof(uint32_t) >= sizeof(T), "Type size issue");
-  const uint32_t cast = reinterpret_cast<uint32_t>(t);
+  const uint32_t cast = static_cast<uint32_t>(t);
   return std::array<uint8_t, sizeof(uint32_t)>{
       static_cast<uint8_t>(0xff & (cast >> 24)),
       static_cast<uint8_t>(0xff & (cast >> 16)),
@@ -207,7 +239,7 @@ MakeMSBU8Array(T t) {
       static_cast<uint8_t>(0xff & cast),
   };
 }
-
+#endif
 template <typename T>
 [[deprecated]]
 inline constexpr std::array<uint8_t, sizeof(uint32_t)> MakeU8Array(T t) {
