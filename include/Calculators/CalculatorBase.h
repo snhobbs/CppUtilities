@@ -21,10 +21,30 @@
  */
 namespace Utilities {
 template <typename T, typename U = int64_t>
+inline constexpr T floor(const T value) {
+#ifdef __clang__
+  static_assert(std::is_integral<U>());
+  return (static_cast<T>(static_cast<U>(value)));
+#else
+  return std::floor(value);
+#endif
+}
+
+template <typename T, typename U = int64_t>
+inline constexpr T ceil(const T value) {
+#ifdef __clang__
+  static_assert(std::is_integral<U>());
+  return (static_cast<T>(static_cast<U>(value - 0.5)) + 1);
+#else
+  return std::ceil(value);
+#endif
+}
+
+template <typename T, typename U = int64_t>
 inline constexpr T round(const T value) {
 #ifdef __clang__
   static_assert(std::is_integral<U>());
-  if (value > 0) {
+  if (value >= 0) {
     return (static_cast<T>(static_cast<U>(value + 0.5)));
   } else {
     return (static_cast<T>(static_cast<U>(value - 0.5)));
@@ -33,6 +53,7 @@ inline constexpr T round(const T value) {
   return std::round(value);
 #endif
 }
+
 
 template<typename T> inline constexpr T abs(const T t) {
 #ifdef __clang__

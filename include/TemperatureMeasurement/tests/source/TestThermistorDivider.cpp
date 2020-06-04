@@ -9,7 +9,7 @@
 #include <cstdio>
 #include <iostream>
 
-class Thermistor : public ThermistorDividerBase {
+class Thermistor : public TemperatureMeasurement::ThermistorDividerBase {
  public:
   static const uint32_t kADCBits = 12;
   static const constexpr int32_t kRPullup = 17.4e3; // R46
@@ -34,13 +34,16 @@ class Thermistor : public ThermistorDividerBase {
           kAdcReferenceMicroVolts, kRPullup, kT0Celsius, kBFactor, kR0>;
 
  public:
-  static constexpr const auto kTable = TemperatureTableMaker<
-      kTemperatureStart, kTemperatureEnd, kNumPoints,
+  static constexpr const auto kTable =
+    TemperatureMeasurement::TemperatureTableMaker<kTemperatureStart, kTemperatureEnd, kNumPoints,
       decltype(temperature_to_adc)>::GetTable(temperature_to_adc);
 
   static constexpr int32_t GetMicroCelsiusFromAdcReading(uint32_t adc_reading) {
-    return InterpolatePoint(
-        adc_reading, FindMatchingIndex(adc_reading), kTable.data());
+    const auto close_index = FindMatchingIndex(adc_reading);
+    return InterpolatePoint(adc_reading, kTable[close_index]);
+  }
+  static constexpr std::size_t FindLowerMatchingIndex(std::size_t index) {
+     return FindMatchingIndexLower(index, kTable.data(), kTable.size());
   }
   static constexpr std::size_t FindMatchingIndex(std::size_t index) {
      return FindClosestMatchingIndex(index, kTable.data(), kTable.size());
@@ -59,42 +62,81 @@ TEST(TableValues) {
 }
 #endif
 
-TEST(Thermistor, FindMatchingIndex) {
-  Thermistor cont{};
+TEST(Thermistor, FixedTemperatureIncreases) {
+  auto last_temp = std::numeric_limits<decltype(Thermistor::kTable[0].t0)>::min();
+  for (auto pt : Thermistor::kTable) {
+    EXPECT_TRUE(pt.t0 >= last_temp);
+    last_temp = pt.t0;
+  }
+}
 
+TEST(Thermistor, IndexDecreases) {
+  auto last = std::numeric_limits<decltype(Thermistor::kTable[0].adc_reading)>::max();
+  for (auto pt : Thermistor::kTable) {
+    EXPECT_TRUE(pt.adc_reading < last);
+    last = pt.adc_reading;
+  }
+}
+
+TEST(Thermistor, SlopeNegative) {
+  for (auto pt : Thermistor::kTable) {
+    EXPECT_TRUE(pt.DeltaTByDeltaADCSlope < 0);
+  }
+}
+
+TEST(Thermistor, FindMatchingIndexLower) {
   uint32_t last_index = std::numeric_limits<uint32_t>::max();
-  for (int i = 0; i < (1 << Thermistor::kADCBits); i += 1) {
-    const auto index = cont.FindMatchingIndex(i);
+  for (std::size_t i = 0; i < Thermistor::kTable[0].adc_reading; i += 1) {
+    const auto index = Thermistor::FindLowerMatchingIndex(i);
     EXPECT_TRUE(index <= last_index);
     last_index = index;
   }
 }
 
-
-TEST(Thermistor, TableMakerInterpolation) {
-  Thermistor cont{};
-
-  const int32_t kTempStep = 1e6;
-  for (unsigned int i = 0; i < cont.kTable.size(); i++) {
-    EXPECT_NEAR(cont.kTable[i].t0,
-                cont.GetMicroCelsiusFromAdcReading(cont.kTable[i].adc_reading),
-                15);
-  }
-
+TEST(Thermistor, FindMatchingIndex) {
   uint32_t last_index = std::numeric_limits<uint32_t>::max();
-  int32_t last_temp = cont.GetMicroCelsiusFromAdcReading(0);
-  for (int i = 0; i < (1 << Thermistor::kADCBits); i += 1) {
-    const auto index = cont.FindMatchingIndex(i);
+  for (std::size_t i = 0; i < Thermistor::kTable[0].adc_reading; i += 1) {
+    const auto index = Thermistor::FindMatchingIndex(i);
     EXPECT_TRUE(index <= last_index);
-    // printf("%d\n", index);
-    const int32_t temp = cont.GetMicroCelsiusFromAdcReading(i);
-    // cout << i << "\t" << cont.GetTemperatureInMicroCelsius(i) << endl;
-    EXPECT_TRUE(temp <= last_temp);
-    EXPECT_NEAR(temp, last_temp, kTempStep);
-    if (temp > last_temp) {
-      printf("%d\t%d\t%d\t%d\t%u\n", i, temp, last_temp, index, last_index);
+    last_index = index;
+  }
+}
+
+TEST(Thermistor, T0CloseToInterpolatedValue) {
+  for (auto pt : Thermistor::kTable) {
+    EXPECT_EQ(pt.t0, Thermistor::GetMicroCelsiusFromAdcReading(pt.adc_reading));
+  }
+}
+
+/*
+ * Check that all interpolated temperatures between ranges are between the measured points
+ * */
+TEST(Thermistor, InterpolatedTemperatureLessThanNextPoint) {
+  for (std::size_t i = 0; i < Thermistor::kTable.size() - 1; i++) {
+    for (std::size_t index = Thermistor::kTable[i].adc_reading; index > Thermistor::kTable[i+1].adc_reading; index--) {
+      const auto temp = Thermistor::GetMicroCelsiusFromAdcReading(index);
+      EXPECT_LE(temp, Thermistor::kTable[i + 1].t0);
+      EXPECT_GE(temp, Thermistor::kTable[i].t0);
+    }
+  }
+}
+
+#if 1
+
+/*
+ * ADC value decreases with increasing temp.
+ * Check temperature calculated for the lower index is higher than the current calculated value
+ * */
+TEST(Thermistor, InterpolatedTemperatureIncreasesByIndex) {
+  auto last_temp = std::numeric_limits<decltype(Thermistor::kTable[0].t0)>::max();
+  for (std::size_t i = 0; i < Thermistor::kTable[0].adc_reading; i++) {
+    const auto temp = Thermistor::GetMicroCelsiusFromAdcReading(i);
+
+    EXPECT_GE(last_temp, temp);
+    if(last_temp < temp) {
+      printf("%u\tLast Index: %u, %u\t This Index: %u, %u\n", i, Thermistor::FindMatchingIndex(i-1), last_temp, Thermistor::FindMatchingIndex(i), temp);
     }
     last_temp = temp;
-    last_index = index;
   }
 }
+#endif

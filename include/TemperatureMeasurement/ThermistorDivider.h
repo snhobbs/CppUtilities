@@ -1,6 +1,7 @@
 /*
  * Copyright 2020 ElectroOptical Innovations, LLC
  * */
+
 #pragma once
 #ifndef TEMPERATUREMEASUREMENT_THERMISTORDIVIDER_H_
 #define TEMPERATUREMEASUREMENT_THERMISTORDIVIDER_H_
@@ -13,12 +14,6 @@
 #include <cstdint>
 #include <limits>
 
-struct InterpolatedTemperatureLine {
-  int32_t adc_reading = 0;
-  int32_t t0 = 0;
-  int32_t DeltaTByDeltaADCSlope = 0;
-};
-
 /*
  * Make a table that can take an adc value and lookup the temperature
  * has the adc value, the temp and the temp slope to the next point
@@ -30,33 +25,33 @@ namespace TemperatureMeasurement {
  * Two node voltage divider with one node as a thermistor and another as a fixed
  * resistor ADC measuring at node of divider
  * */
+struct InterpolatedTemperatureLine {
+  int32_t adc_reading = 0;
+  int32_t t0 = 0;
+  int32_t DeltaTByDeltaADCSlope = 0;
+};
+
+
 template <int kAdcBits, int kThermistorMicroVolts, int kFixedMicroVolts,
           int kAdcReferenceMicroVolts, int kFixedResistor, int kT0Celsius,
           int kBFactor, int kR0>
-inline constexpr int32_t TemperatureToAdcTwoNodeThermistor(double kelvin) {
-  const auto r_inf =
-      TemperatureCalculator::Calculate_r_inf(kR0, kBFactor, kT0Celsius);
+inline constexpr int32_t TemperatureToAdcTwoNodeThermistor(const double kelvin) {
+  const auto r_inf = TemperatureCalculator::Calculate_r_inf(kR0, kBFactor, kT0Celsius);
   assert(r_inf > 0);
-  const auto thermistor_resistance =
-      TemperatureCalculator::ResistanceFromTemperature(kelvin, kBFactor, r_inf);
-  const int64_t thermistor_resistance_int =
-      Utilities::StaticCastQuickFail<int64_t>(
-          Utilities::round<decltype(thermistor_resistance), int64_t>(thermistor_resistance));
-  assert(thermistor_resistance > 0);
-  const int64_t node_micro_volts =
-      Calculator<int64_t>::TwoNodeVoltageDivider<int64_t>(
-          kThermistorMicroVolts, kFixedMicroVolts, thermistor_resistance_int,
-          kFixedResistor);
+  const auto thermistor_resistance = TemperatureCalculator::ResistanceFromTemperature(kelvin, kBFactor, r_inf);
+  const auto thermistor_resistance_rounded = Utilities::round<decltype(thermistor_resistance), int64_t>(thermistor_resistance);
+  const auto thermistor_resistance_int = Utilities::StaticCastQuickFail<int64_t>(thermistor_resistance_rounded);
+  assert(thermistor_resistance_int > 0);
+  const auto node_micro_volts = Calculator<int64_t>::TwoNodeVoltageDivider<int64_t>(
+          kThermistorMicroVolts, kFixedMicroVolts, thermistor_resistance_int, kFixedResistor);
   const int32_t adc_value = Calculator<int32_t>::ScaleToDigitalValue<int64_t>(
       node_micro_volts, kAdcBits, 0, kAdcReferenceMicroVolts);
   //  assert(adc_value < (1<<kAdcBits));
   return adc_value;
 }
-} //  namespace TemperatureMeasurement
 
 //  todo need to do something to handle different temps being the same adc value
-template <int32_t kTCelsiusStart, int32_t kTCelsiusEnd, uint32_t kNumPoints,
-          typename F>
+template <int32_t kTCelsiusStart, int32_t kTCelsiusEnd, uint32_t kNumPoints, typename F>
 class TemperatureTableMaker {
   static const constexpr auto kNumIntervals = (kNumPoints - 1);
   static_assert(kTCelsiusStart < kTCelsiusEnd, "Not increasing");
@@ -66,15 +61,34 @@ class TemperatureTableMaker {
   static_assert(kTemperatureStepSize * kNumIntervals + kTCelsiusStart ==
                 kTCelsiusEnd);
 
+  static constexpr void SetSlopeBetweenPoints(std::array<InterpolatedTemperatureLine, kNumPoints>* arr) {
+    for (std::size_t i = 0; i < arr->size() - 1; i++) {
+      const double adc_reading = arr->at(i).adc_reading;
+      const double next_adc_reading = arr->at(i + 1).adc_reading;
+      const double tdiff = arr->at(i + 1).t0 - arr->at(i).t0;
+      const auto slope = Utilities::round<decltype(tdiff), int32_t>(
+          (tdiff) / (next_adc_reading - adc_reading));
+      const auto rounded_slope = Utilities::StaticCastQuickFail<int32_t>(slope);
+      const auto tdiff_calc = (next_adc_reading - adc_reading) * rounded_slope;
+
+      arr->at(i).DeltaTByDeltaADCSlope = rounded_slope;
+    }
+    //  last point has same slope as preceeding one
+    arr->at(arr->size() - 1).DeltaTByDeltaADCSlope =
+        arr->at(arr->size() - 2).DeltaTByDeltaADCSlope;
+  }
+
  public:
-  static constexpr const std::array<InterpolatedTemperatureLine, kNumPoints>
+  /*
+   * Generate an array of interpolation points with slopes between them
+   * */
+  static constexpr std::array<InterpolatedTemperatureLine, kNumPoints>
   GetTable(F TemperatureToAdc) {
     std::array<InterpolatedTemperatureLine, kNumPoints> arr;
 
-    for (unsigned int i = 0; i < kNumPoints; i++) {
+    for (std::size_t i = 0; i < arr.size(); i++) {
       const double t = kTCelsiusStart + i * kTemperatureStepSize;
-      const auto adc_reading =
-          TemperatureToAdc(TemperatureCalculator::CelsiusToKelvin(t));
+      const auto adc_reading = TemperatureToAdc(TemperatureCalculator::CelsiusToKelvin(t));
       assert(adc_reading >= 0);
       arr[i].adc_reading = Utilities::StaticCastQuickFail<int32_t>(adc_reading);
       arr[i].t0 = Utilities::StaticCastQuickFail<int32_t>(
@@ -82,30 +96,20 @@ class TemperatureTableMaker {
               Calculator<double>::TranslateToMicro(t)));
     }
 
-    //  assign slope between points
-    for (unsigned int i = 0; i < kNumPoints - 1; i++) {
-      const double adc_reading = arr[i].adc_reading;
-      const double next_adc_reading = arr[i + 1].adc_reading;
-      const double tdiff = arr[i + 1].t0 - arr[i].t0;
-      const auto slope = Utilities::round<decltype(tdiff), int32_t>(
-          (tdiff) / (next_adc_reading - adc_reading));
-      arr[i].DeltaTByDeltaADCSlope =
-          Utilities::StaticCastQuickFail<int32_t>((slope));
-    }
-    //  last point has same slope as preceeding one
-    arr[arr.size() - 1].DeltaTByDeltaADCSlope =
-        arr[arr.size() - 2].DeltaTByDeltaADCSlope;
+    SetSlopeBetweenPoints(&arr);
     return arr;
   }
 };
 
 class ThermistorDividerBase {
-protected:
-  static constexpr uint32_t
-  FindMatchingIndexLower(const int32_t adc_reading,
+ //protected:
+ public:
+  static constexpr std::size_t 
+  FindMatchingIndexLower(const std::size_t index,
                          const InterpolatedTemperatureLine *const table,
-                         const uint32_t array_size) {
-    for (unsigned int i = 0; i < array_size; i++) {
+                         const std::size_t array_size) {
+    const int32_t adc_reading = static_cast<int32_t>(index);
+    for (std::size_t i = 0; i < array_size; i++) {
       if (table[i].adc_reading < adc_reading) { //  table is decreasing in adc
         return i;
       }
@@ -140,17 +144,17 @@ protected:
   }
 
   static constexpr int32_t
-  InterpolatePoint(const int32_t adc_reading,
-                   const uint32_t closest_match_index,
-                   const InterpolatedTemperatureLine *const table) {
-    const InterpolatedTemperatureLine &pt_close = table[closest_match_index];
+  InterpolatePoint(const int32_t adc_reading, const InterpolatedTemperatureLine& pt_close) {
 
     //  assert(lower_match_index);
     const int32_t step_size = (adc_reading - pt_close.adc_reading);
     const int32_t gain_calc =
         (pt_close.DeltaTByDeltaADCSlope * step_size) + pt_close.t0;
-    return gain_calc;
+
+    //  pin the value to the next known point if higher
+    return gain_calc < pt_close.t0 ? pt_close.t0 : gain_calc;
   }
 };
 
-#endif //  TEMPERATUREMEASUREMENT_THERMISTORDIVIDER_H_
+} //  namespace TemperatureMeasurement
+#endif  //  TEMPERATUREMEASUREMENT_THERMISTORDIVIDER_H_
