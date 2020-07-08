@@ -96,8 +96,7 @@ class StaticTaskScheduler{
         Finds the first task available and returns its index.
     */
     uint32_t GetNextAvailable(const uint32_t tick) {
-        uint32_t i = 0;
-        for (i = 0; i < task_count_; i++) {
+        for (std::size_t i = 0; i < task_count_; i++) {
             CooperativeTask& task = Table[i];
             if (task.CheckFinished(tick)) {
                 return i;
