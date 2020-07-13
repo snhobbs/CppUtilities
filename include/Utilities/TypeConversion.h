@@ -32,7 +32,7 @@ inline constexpr std::size_t CalcNumberOfBytesToFitBits(
 }
 
 template<std::size_t byte_swap_count, typename T>
-void SwitchByteOrder(T* data) {
+void SwitchByteOrder(T& data) {
   assert(data.size() % byte_swap_count == 0);
   for (std::size_t i = 0; i < data.size(); i += byte_swap_count) {
     std::array<uint8_t, byte_swap_count> buffer{};

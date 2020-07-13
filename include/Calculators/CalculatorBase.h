@@ -6,6 +6,7 @@
 #ifndef CALCULATORS_CALCULATORBASE_H_
 #define CALCULATORS_CALCULATORBASE_H_
 #include <Utilities/TypeConversion.h>
+#include <Utilities/math.h>
 #include <limits>
 #include <tuple>
 #include <type_traits>
@@ -20,49 +21,6 @@
  *
  */
 namespace Utilities {
-template <typename T, typename U = int64_t>
-inline constexpr T floor(const T value) {
-#ifdef __clang__
-  static_assert(std::is_integral<U>());
-  return (static_cast<T>(static_cast<U>(value)));
-#else
-  return std::floor(value);
-#endif
-}
-
-template <typename T, typename U = int64_t>
-inline constexpr T ceil(const T value) {
-#ifdef __clang__
-  static_assert(std::is_integral<U>());
-  return (static_cast<T>(static_cast<U>(value - 0.5)) + 1);
-#else
-  return std::ceil(value);
-#endif
-}
-
-template <typename T, typename U = int64_t>
-inline constexpr T round(const T value) {
-#ifdef __clang__
-  static_assert(std::is_integral<U>());
-  if (value >= 0) {
-    return (static_cast<T>(static_cast<U>(value + 0.5)));
-  } else {
-    return (static_cast<T>(static_cast<U>(value - 0.5)));
-  }
-#else
-  return std::round(value);
-#endif
-}
-
-
-template<typename T> inline constexpr T abs(const T t) {
-#ifdef __clang__
-  return t > 0 ? t : -t;
-#else
-  return std::abs(t);
-#endif
-}
-
 template <typename T> inline constexpr T TranslateToMicro(const T value) {
   const T kMicroScaleFactor = 1000 * 1000;
   return Utilities::round(value * kMicroScaleFactor);
@@ -83,21 +41,21 @@ template <typename T>
 inline constexpr MultiplyShiftEstimateResult<T>
 MultiplyShiftEstimate(const double value, const std::size_t multiplier_max,
                       const std::size_t shift_max) {
-  const auto abs_value = Utilities::abs<double>(value);
+  const auto abs_value = Utilities::abs(value);
   const auto dmultiplier_max = static_cast<double>(multiplier_max);
   const T kMicroScaleFactor = 1000 * 1000;
   T mult = 0;
   std::size_t shift = 0;
   double last_diff = kMicroScaleFactor * abs_value;
   for (std::size_t i = 0; i < shift_max; i++) {
-    const double value_shift = Utilities::round(abs_value * std::pow(2, i));
-    const double approx_value = value_shift * std::pow(2, -static_cast<double>(i));
-    const double diff = kMicroScaleFactor * Utilities::abs<double>(abs_value - approx_value);
+    const double value_shift = Utilities::round(abs_value * Utilities::pow(2, i));
+    const double approx_value = value_shift * Utilities::pow(2, -static_cast<double>(i));
+    const double diff = kMicroScaleFactor * Utilities::abs(abs_value - approx_value);
     if (value_shift > dmultiplier_max) {
       break;
     } else if (diff < last_diff) {
       mult = static_cast<int32_t>(
-          Utilities::round<decltype(value_shift), int64_t>(value_shift));
+          Utilities::round(value_shift));
       shift = i;
       last_diff = diff;
     }

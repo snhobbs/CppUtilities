@@ -36,9 +36,9 @@ template <int kAdcBits, int kThermistorMicroVolts, int kFixedMicroVolts,
           int kAdcReferenceMicroVolts, int kFixedResistor, int kT0Celsius,
           int kBFactor, int kR0>
 inline constexpr int32_t TemperatureToAdcTwoNodeThermistor(const double kelvin) {
-  const auto r_inf = TemperatureCalculator::Calculate_r_inf(kR0, kBFactor, kT0Celsius);
+  const auto r_inf = Utilities::TemperatureCalculator::Calculate_r_inf(kR0, kBFactor, kT0Celsius);
   assert(r_inf > 0);
-  const auto thermistor_resistance = TemperatureCalculator::ResistanceFromTemperature(kelvin, kBFactor, r_inf);
+  const auto thermistor_resistance = Utilities::TemperatureCalculator::ResistanceFromTemperature(kelvin, kBFactor, r_inf);
   const auto thermistor_resistance_rounded = Utilities::round<decltype(thermistor_resistance), int64_t>(thermistor_resistance);
   const auto thermistor_resistance_int = Utilities::StaticCastQuickFail<int64_t>(thermistor_resistance_rounded);
   assert(thermistor_resistance_int > 0);
@@ -88,7 +88,7 @@ class TemperatureTableMaker {
 
     for (std::size_t i = 0; i < arr.size(); i++) {
       const double t = kTCelsiusStart + i * kTemperatureStepSize;
-      const auto adc_reading = TemperatureToAdc(TemperatureCalculator::CelsiusToKelvin(t));
+      const auto adc_reading = TemperatureToAdc(Utilities::CelsiusToKelvin(t));
       assert(adc_reading >= 0);
       arr[i].adc_reading = Utilities::StaticCastQuickFail<int32_t>(adc_reading);
       arr[i].t0 = Utilities::StaticCastQuickFail<int32_t>(
