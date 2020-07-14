@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.10.0)
+
 project(Testing)
 set(dirs
  Calculators
@@ -22,8 +23,6 @@ endforeach()
 
 #-----------------------------------------------------------------------------
 
-#SET(CMAKE_CXX_COMPILER clang++-8)
-SET(CMAKE_CXX_COMPILER /usr/bin/g++-8)
 add_executable(tests)
 
 option(Sanitizer "Run address sanitizer" OFF)
@@ -36,6 +35,12 @@ $<$<CONFIG:DEBUG>:-fsanitize=address>
   -fno-omit-frame-pointer
   $<$<CONFIG:DEBUG>:-fsanitize=undefined>
   )
+target_link_libraries( tests asan)
+#target_link_libraries( tests tsan)
+target_link_libraries( tests ubsan)
+#target_link_libraries( tests msan)
+
+
 endif()
 
 target_compile_options(
@@ -95,11 +100,6 @@ get_target_property( srcs tests SOURCES)
 foreach(src ${srcs})
   message("Source: ${src}")
 endforeach()
-
-target_link_libraries( tests asan)
-#target_link_libraries( tests tsan)
-target_link_libraries( tests ubsan)
-#target_link_libraries( tests msan)
 
 find_package(gtest QUIET)
 target_link_libraries(tests gtest)
