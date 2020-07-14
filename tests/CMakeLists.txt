@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10.0)
-
+project(Testing)
 set(dirs
  Calculators
  CooperativeScheduler
@@ -109,17 +109,18 @@ target_include_directories(tests PUBLIC ${TESTSRC})
 target_include_directories(tests PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 message(STATUS "Sources: ${DIR_SRCS}")
+find_package(EmbeddedCMake)
 include(${EmbeddedCMake_DIR}/source/Utilities.cmake)
 GetStaticAnalysisFiles(tests "")
 add_test(NAME ${CMAKE_SOURCE_DIR} COMMAND tests)
 list(APPEND AnalyseFiles ${DIR_SRCS})
-message(${AnalyseFiles})
 
 #------------------------------------------------------------
 # Static Analysis
 #------------------------------------------------------------
 option(RUN_ANALYSIS "Run CppCheck, CppLint, and Clang-tidy" ON)
 if(${RUN_ANALYSIS})
+message("${AnalyseFiles}")
 set(CMAKE_CXX_CPPLINT "cpplint;--verbose=5;--linelength=100")
 set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-checks=*;-format-style=google;-export-fixes=${CMAKE_CURRENT_BINARY_DIR}/clangtidy.results")
 
