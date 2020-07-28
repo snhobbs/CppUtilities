@@ -74,4 +74,8 @@ template<typename T> inline constexpr T abs(const T t) {
 #endif
 }
 
+template<typename T>
+constexpr T AbsDiff(const T a, const T b) {
+  return a > b ? a - b : b - a;
+}
 }  //  namespace Utilities
