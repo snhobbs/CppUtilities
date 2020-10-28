@@ -267,5 +267,17 @@ inline constexpr T StaticCastQuickFail(U x) {
   return static_cast<T>(x);
 }
 
+template<typename T>
+void ArrayToBytes(const T * const data_in, uint8_t * const data_out, const std::size_t size_in, const std::size_t size_out) {
+  const std::size_t dsize_mult = size_out/sizeof(T);
+  std::size_t data_out_count = 0;
+  for (std::size_t i = 0; i < std::min(size_in, size_out/dsize_mult); i++) {
+    for (std::size_t j = 0; j < dsize_mult; j++) {
+      data_out[i*dsize_mult + j] = 0xff & (data_in[i] >> dsize_mult*j);
+    }
+  }
+}
+
+
 }  //  namespace Utilities
 #endif  //  UTILITIES_TYPECONVERSION_H_
