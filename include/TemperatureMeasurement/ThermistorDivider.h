@@ -32,9 +32,9 @@ struct InterpolatedTemperatureLine {
 };
 
 
-template <int kAdcBits, int kThermistorMicroVolts, int kFixedMicroVolts,
-          int kAdcReferenceMicroVolts, int kFixedResistor, int kT0Celsius,
-          int kBFactor, int kR0>
+template <int32_t kAdcBits, int32_t kThermistorMicroVolts, int32_t kFixedMicroVolts,
+    int32_t kAdcReferenceMicroVolts, int32_t kFixedResistor, int32_t kT0Celsius,
+	int32_t kBFactor, int32_t kR0>
 inline constexpr int32_t TemperatureToAdcTwoNodeThermistor(const double kelvin) {
   const auto r_inf = Utilities::TemperatureCalculator::Calculate_r_inf(kR0, kBFactor, kT0Celsius);
   assert(r_inf > 0);
