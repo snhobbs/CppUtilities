@@ -31,9 +31,8 @@ SET(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 SET(CMAKE_C_FLAGS_RELEASE "-g -O3")
 SET(CMAKE_CXX_FLAGS_RELEASE "-g -O3")
 
-set(PROJ_SRC ../)
+set(PROJ_SRC ../../)
 set(TESTSRC source)
-set(CORTEXLIB ../../)
 
 message(STATUS "Driver Source: ${TESTSRC}/drivers")
 
@@ -44,8 +43,9 @@ message(STATUS "Sources: ${DIR_SRCS}")
 
 ADD_EXECUTABLE(${PROJECT_NAME} ${DIR_SRCS})
 
-target_link_libraries(${PROJECT_NAME} UnitTest++.a)
-add_library(UnitTest++ STATIC IMPORTED )# STATIC /usr/local/include/UnitTest++)
+find_package(gtest QUIET)
+target_link_libraries(${PROJECT_NAME} gtest)
+target_link_libraries(${PROJECT_NAME} pthread)
 
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJ_SRC} )

@@ -63,7 +63,7 @@ class RingBuffer final : public Buffer<T> {
   }
 
   virtual void Reset(void) {
-    buffer_.Reset();
+    buffer_.reset();
   }
 
   [[deprecated]] void reset() { Reset(); }
@@ -71,7 +71,7 @@ class RingBuffer final : public Buffer<T> {
   virtual std::size_t GetCount(void) const {
     return buffer_.GetCount();
   }
-  static constexpr std::size_t GetSize(void) { return buffer_.size(); }
+  static constexpr std::size_t GetSize(void) { return kElements; }
   static constexpr std::size_t frameSize(void) { return GetSize(); }
 
   virtual std::size_t Size(void) const { return GetSize(); }
@@ -83,7 +83,7 @@ class RingBuffer final : public Buffer<T> {
   RingBuffer operator=(const RingBuffer &) = delete;
 
  private:
-  LightweightRingBuffer<T, kElements> buffer_;
+  LightWeightRingBuffer<T, kElements> buffer_;
 };
 
 #endif //  RINGBUFFER_RINGBUFFER_H_

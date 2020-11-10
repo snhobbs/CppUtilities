@@ -51,6 +51,21 @@ class LightWeightRingBuffer {
     return 0;
   }
 
+  void peek(T *out, const std::size_t pos) const {
+    //  pos is the count backwards from head, pos = 0 is head, pos = count is
+    //  tail
+    std::size_t ArrayPos = 0;
+    if (pos <= GetCount()) {
+      if (pos <= GetHead()) {
+        ArrayPos = GetHead() - pos;
+      } else {
+        ArrayPos = GetTail() + (GetCount() - pos);
+      }
+    }
+    *out = buffer_[ArrayPos];
+  }
+
+
   std::size_t insert(const T *const in, const std::size_t count) {
     std::size_t inserted = 0;
     for (std::size_t i = 0; i < count; i++) {
@@ -71,6 +86,13 @@ class LightWeightRingBuffer {
     return 0;
   }
 
+  std::size_t insertOverwrite(const T &in) {
+    if (isFull()) {
+      tail += 1;
+    }
+    return insert(in);
+  }
+
   void reset(void) {
     head = 0;
     tail = 0;
@@ -89,7 +111,7 @@ class LightWeightRingBuffer {
 
   static constexpr std::size_t size(void) { return kElements; }
 
-  LightWeightRingBuffer(void) {}
+  constexpr LightWeightRingBuffer(void) {}
   LightWeightRingBuffer(const LightWeightRingBuffer&) = delete;
   LightWeightRingBuffer operator=(const LightWeightRingBuffer&) = delete;
 };
