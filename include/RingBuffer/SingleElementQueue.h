@@ -12,16 +12,13 @@
 
 #include <RingBuffer/RingBuffer.h>
 
-template <typename T> class SingleElementQueue : public Buffer<T> {
-  bool empty_ = true;
-  T data_{};
-
+template <typename T> class SingleElementQueueBase {
  public:
-  virtual void Reset(void) { empty_ = true; }
-  virtual bool isEmpty(void) const { return empty_; }
-  virtual bool isFull(void) const { return !empty_; }
-  uint32_t pop(T &out) { return pop(&out, 1); }
-  virtual uint32_t pop(T *const out, const uint32_t) {
+  void Reset(void) { empty_ = true; }
+  bool isEmpty(void) const { return empty_; }
+  bool isFull(void) const { return !empty_; }
+  pop(T &out) { return pop(&out, 1); }
+  uint32_t pop(T *const out, const uint32_t) {
     if (!empty_) {
       empty_ = true;
       *out = data_;
@@ -29,7 +26,7 @@ template <typename T> class SingleElementQueue : public Buffer<T> {
     }
     return 0;
   }
-  virtual uint32_t insert(const T *const in, const uint32_t) {
+  uint32_t insert(const T *const in, const uint32_t) {
     if (!empty_) {
       assert(empty_);
     }
@@ -38,20 +35,42 @@ template <typename T> class SingleElementQueue : public Buffer<T> {
     return 1;
   }
 
-  virtual uint32_t insert(const T &in) { return insert(&in, 1); }
-  virtual uint32_t GetCount(void) const {
-    if (empty_)
-      return 0;
-    else
-      return 1;
+  uint32_t GetCount(void) const {
+    return empty_ ? 0 : size();
   }
-  virtual uint32_t Size(void) const { return 1; }
+  uint32_t size(void) const { return 1; }
+
+ private:
+  bool empty_ = true;
+  T data_{};
+};
+
+template <typename T> class SingleElementQueue : public Buffer<T> {
+ public:
+  virtual void Reset(void) { buffer_.reset(); }
+  virtual bool isEmpty(void) const { return buffer_.isEmpty(); }
+  virtual bool isFull(void) const { return buffer_.isFull(); }
+  [[deprecated]] uint32_t pop(T &out) { return pop(&out, 1); }
+  virtual uint32_t pop(T *const out, const uint32_t count) {
+    return buffer_.pop(out, count);
+  }
+  virtual uint32_t insert(const T *const in, const uint32_t count) {
+    return buffer_.insert(in, count);
+  }
+  [[deprecated]] virtual uint32_t insert(const T &in) { return insert(&in, 1); }
+  virtual uint32_t GetCount(void) const {
+    return buffer_.GetCount();
+  }
+  virtual uint32_t Size(void) const { return buffer.size(); }
 
   constexpr SingleElementQueue(void) {}
   SingleElementQueue(const SingleElementQueue &) = delete;
   SingleElementQueue operator=(const SingleElementQueue &) = delete;
 
   virtual ~SingleElementQueue(void) {}
+
+ private:
+  SingleElementQueueBase<T> buffer_;
 };
 
 #endif // RINGBUFFER_SINGLEELEMENTQUEUE_H_
