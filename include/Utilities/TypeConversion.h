@@ -272,17 +272,13 @@ template<typename T>
 void ArrayToBytes(const T * const data_in, uint8_t * const data_out, const std::size_t size_in, const std::size_t size_out) {
   std::size_t data_out_count = 0;
   for (std::size_t i = 0; i < std::min(size_in, size_out/sizeof(T)); i++) {
-<<<<<<< HEAD
     const auto arr = MakeMSBU8Array<T>(data_in[i]);
     for (std::size_t j = 0; j < arr.size(); j++) {
       data_out[i*sizeof(T) + j] = arr[j];
-=======
-    for (std::size_t j = 0; j < sizeof(T); j++) {
-      data_out[i*sizeof(T) + j] = 0xff & (data_in[i] >> (sizeof(T)*j));
->>>>>>> 69bc4d2... added array to bytes
     }
   }
 }
+
 template<typename T>
 void ArrayFromBytes(const uint8_t * const data_in, T * const data_out, const std::size_t size_in, const std::size_t size_out) {
   //#ERROR
