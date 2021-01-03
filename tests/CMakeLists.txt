@@ -131,7 +131,7 @@ Cppcheck("${CMAKE_CURRENT_SOURCE_DIR}" "${AnalyseFiles}" cppcheck)
 flint("${CMAKE_CURRENT_SOURCE_DIR}" "${AnalyseFiles}" flint++)
 endfunction()
 
-option(RUN_ANALYSIS "Run CppCheck, CppLint, and Clang-tidy" ON)
+option(RUN_ANALYSIS "Run CppCheck, CppLint, and Clang-tidy" OFF)
 if(RUN_ANALYSIS)
   Analyze("${DIR_SRCS}")
 endif()
