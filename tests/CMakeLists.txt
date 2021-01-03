@@ -111,17 +111,18 @@ target_include_directories(tests PUBLIC ${TESTSRC})
 target_include_directories(tests PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 message(STATUS "Sources: ${DIR_SRCS}")
-include(CMakeStaticAnalysis/Utilities.cmake)
-include(CMakeStaticAnalysis/StaticAnalysis.cmake)
-GetStaticAnalysisFiles("tests" "")
 add_test(NAME ${CMAKE_SOURCE_DIR} COMMAND tests)
-list(APPEND AnalyseFiles ${DIR_SRCS})
 
 #------------------------------------------------------------
 # Static Analysis
 #------------------------------------------------------------
-option(RUN_ANALYSIS "Run CppCheck, CppLint, and Clang-tidy" ON)
-if(${RUN_ANALYSIS})
+option(RUN_ANALYSIS "Run CppCheck, CppLint, and Clang-tidy" OFF)
+if(OFF)
+  message(Running Analysis)
+list(APPEND AnalyseFiles ${DIR_SRCS})
+include(CMakeStaticAnalysis/Utilities.cmake)
+include(CMakeStaticAnalysis/StaticAnalysis.cmake)
+GetStaticAnalysisFiles("tests" "")
 message("${AnalyseFiles}")
 set(CMAKE_CXX_CPPLINT "cpplint;--verbose=5;--linelength=100")
 set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-checks=*;-format-style=google;-export-fixes=${CMAKE_CURRENT_BINARY_DIR}/clangtidy.results")
@@ -130,4 +131,3 @@ Cpplint("${CMAKE_CURRENT_SOURCE_DIR}" "${AnalyseFiles}" cpplint)
 Cppcheck("${CMAKE_CURRENT_SOURCE_DIR}" "${AnalyseFiles}" cppcheck)
 flint("${CMAKE_CURRENT_SOURCE_DIR}" "${AnalyseFiles}" flint++)
 endif()
-
