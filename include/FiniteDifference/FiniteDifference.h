@@ -19,8 +19,11 @@ enum class BootStage{
 };
 
 class SecFiniteDif{
+  public:
     static const int kSecondDerivOrder = 2;
     static const constexpr int kWindowCount = kSecondDerivOrder+2;
+
+  private:
     const uint32_t boxcar_length_;
 
     uint8_t newest_boxcar = 0;

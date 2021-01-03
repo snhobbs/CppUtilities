@@ -1,3 +1,6 @@
 [submodule "include/spline"]
 	path = include/spline
 	url = git@github.com:snhobbs/spline.git
+[submodule "tests/CMakeStaticAnalysis"]
+	path = tests/CMakeStaticAnalysis
+	url = git@github.com:snhobbs/CMakeStaticAnalysis.git

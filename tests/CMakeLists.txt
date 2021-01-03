@@ -10,7 +10,9 @@ set(dirs
  RingBuffer
  TemperatureMeasurement
 )
+set(PROJECT_SOURCE_DIR ..)
 foreach(dir ${dirs})
+  message("Directory: ${PROJECT_SOURCE_DIR}/include/${dir}/tests")
   set(path ${PROJECT_SOURCE_DIR}/include/${dir}/tests)
   if(EXISTS ${path})
     message(STATUS "${dir} has tests")
@@ -109,9 +111,9 @@ target_include_directories(tests PUBLIC ${TESTSRC})
 target_include_directories(tests PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 message(STATUS "Sources: ${DIR_SRCS}")
-find_package(EmbeddedCMake)
-include(${EmbeddedCMake_DIR}/source/Utilities.cmake)
-GetStaticAnalysisFiles(tests "")
+include(CMakeStaticAnalysis/Utilities.cmake)
+include(CMakeStaticAnalysis/StaticAnalysis.cmake)
+GetStaticAnalysisFiles("tests" "")
 add_test(NAME ${CMAKE_SOURCE_DIR} COMMAND tests)
 list(APPEND AnalyseFiles ${DIR_SRCS})
 
@@ -124,23 +126,8 @@ message("${AnalyseFiles}")
 set(CMAKE_CXX_CPPLINT "cpplint;--verbose=5;--linelength=100")
 set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-checks=*;-format-style=google;-export-fixes=${CMAKE_CURRENT_BINARY_DIR}/clangtidy.results")
 
-include(${EmbeddedCMake_DIR}/source/cpplint.cmake)
 Cpplint("${CMAKE_CURRENT_SOURCE_DIR}" "${AnalyseFiles}" cpplint)
-
-include(${EmbeddedCMake_DIR}/source/cppcheck.cmake)
 Cppcheck("${CMAKE_CURRENT_SOURCE_DIR}" "${AnalyseFiles}" cppcheck)
-
-#include(${EmbeddedCMake_DIR}/source/cccc.cmake)
-#cccc("${CMAKE_CURRENT_SOURCE_DIR}" "${AnalyseFiles}" cccc)
-
-include(${EmbeddedCMake_DIR}/source/flint++.cmake)
 flint("${CMAKE_CURRENT_SOURCE_DIR}" "${AnalyseFiles}" flint++)
-
-#include(${EmbeddedCMake_DIR}/source/flawfinder.cmake)
-#flawfinder("${CMAKE_CURRENT_SOURCE_DIR}" "${AnalyseFiles}" flawfinder)
-
-#include(${EmbeddedCMake_DIR}/source/pmd.cmake)
-#set(pmd_command "$ENV{HOME}/pmd-bin-6.23.0/bin/run.sh pmd -l -d ${CMAKE_CURRENT_SOURCE_DIR} -l c++ -f text")
-#pmd("${CMAKE_CURRENT_SOURCE_DIR}" "${AnalyseFiles}" ${pmd_command})
 endif()
 
