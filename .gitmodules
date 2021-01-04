@@ -4,3 +4,6 @@
 [submodule "tests/CMakeStaticAnalysis"]
 	path = tests/CMakeStaticAnalysis
 	url = git@github.com:snhobbs/CMakeStaticAnalysis.git
+[submodule "include/Sprout"]
+	path = include/Sprout
+	url = git@github.com:bolero-MURAKAMI/Sprout.git
