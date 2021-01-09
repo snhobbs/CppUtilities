@@ -96,7 +96,7 @@ foreach(src ${DIR_SRC})
 endforeach()
 
 target_sources(tests PUBLIC ${DIR_SRCS})
-target_sources(tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
+target_sources(tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/source/main.cpp)
 
 get_target_property( srcs tests SOURCES)
 foreach(src ${srcs})
