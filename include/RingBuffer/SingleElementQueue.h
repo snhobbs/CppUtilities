@@ -17,7 +17,7 @@ template <typename T> class SingleElementQueueBase {
   void Reset(void) { empty_ = true; }
   bool isEmpty(void) const { return empty_; }
   bool isFull(void) const { return !empty_; }
-  pop(T &out) { return pop(&out, 1); }
+  uint32_t pop(T &out) { return pop(&out, 1); }
   uint32_t pop(T *const out, const uint32_t) {
     if (!empty_) {
       empty_ = true;
@@ -61,7 +61,7 @@ template <typename T> class SingleElementQueue : public Buffer<T> {
   virtual uint32_t GetCount(void) const {
     return buffer_.GetCount();
   }
-  virtual uint32_t Size(void) const { return buffer.size(); }
+  virtual uint32_t Size(void) const { return buffer_.size(); }
 
   constexpr SingleElementQueue(void) {}
   SingleElementQueue(const SingleElementQueue &) = delete;
