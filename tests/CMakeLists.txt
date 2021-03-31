@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.10.0)
 project(Testing)
 set(dirs
  Calculators
- CooperativeScheduler
  FiniteDifference
  PIDFilters
  Utilities
