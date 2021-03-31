@@ -7,3 +7,9 @@
 [submodule "include/sprout"]
 	path = include/sprout
 	url = git@github.com:bolero-MURAKAMI/Sprout.git
+[submodule "include/PIDTemplates"]
+	path = include/PIDTemplates
+	url = git@github.com:snhobbs/PIDTemplates.git
+[submodule "include/CooperativeScheduler"]
+	path = include/CooperativeScheduler
+	url = git@github.com:snhobbs/CooperativeScheduler.git
