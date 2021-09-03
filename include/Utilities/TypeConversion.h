@@ -136,6 +136,13 @@ Make_MSB_IntegerTypeFromU8Array(const uint8_t *const data,
   return Make_MSB_IntegerTypeFromArray<T, uint8_t>(data, data_length);
 }
 
+template<>
+inline constexpr uint8_t
+Make_MSB_IntegerTypeFromU8Array<uint8_t>(const uint8_t *const data,
+                             const std::size_t data_length) {
+  return data[0];
+}
+
 
 inline constexpr uint32_t
 Make_MSB_uint32_tFromU8Array(const uint8_t *const data) {
@@ -227,6 +234,28 @@ inline constexpr std::array<uint8_t, sizeof(T)> MakeMSBU8Array(T t) {
   return MakeMSBU8Array<T, sizeof(T)>(t);
 }
 
+template<typename T>
+inline void ConvertToType(const uint8_t* data, T* entry, const size_t length) {
+  for (size_t i=0; i<length; i+=sizeof(T)) {
+    entry[i] = Make_MSB_IntegerTypeFromArray<T, uint8_t>(&data[i], length);
+  }
+}
+
+template<>
+inline void ConvertToType<uint8_t>(const uint8_t* data, uint8_t* entry, const size_t length) {
+  for (size_t i=0; i<length; i++) {
+    entry[i] = data[i];
+  }
+}
+
+template<>
+inline void ConvertToType<int8_t>(const uint8_t* data, int8_t* entry, const size_t length) {
+  for (size_t i=0; i<length; i++) {
+    entry[i] = static_cast<int8_t>(data[i]);
+  }
+}
+
+
 #if 0
 template <typename T>
 inline constexpr const std::array<uint8_t, sizeof(uint32_t)>
@@ -279,13 +308,38 @@ void ArrayToBytes(const T * const data_in, uint8_t * const data_out, const std::
   }
 }
 
-template<typename T>
-void ArrayFromBytes(const uint8_t * const data_in, T * const data_out, const std::size_t size_in, const std::size_t size_out) {
-  //#ERROR
-  assert(0);
-  //static_assert(0, "Undefined");
+template<>
+inline void ArrayToBytes<uint8_t>(const uint8_t * const data_in, uint8_t * const data_out, const std::size_t size_in, const std::size_t size_out) {
+  for (std::size_t i = 0; i < std::min(size_in, size_out); i++) {
+    data_out[i] = data_in[i];
+  }
 }
 
+
+template<typename T>
+inline void ConvertToBytes(const T& data, uint8_t* entry, const size_t length) {
+  const auto array = Utilities::MakeMSBU8Array<T>(data);
+  for (std::size_t i = 0; i < std::min(array.size(), length); i++) {
+    entry[i] = array[i];
+  }
+}
+
+
+template<typename T>
+void ArrayFromBytes(const uint8_t * const data_in, T * const data_out, const std::size_t size_in, const std::size_t size_out) {
+  for (std::size_t i = 0; i < std::min(size_in/sizeof(T), size_out); i++) {
+    data_out[i] = ConvertToType<T>(&data_in[i*sizeof(T)], sizeof(T));
+  }
+}
+
+template<>
+inline void ArrayFromBytes<uint8_t>(const uint8_t * const data_in, uint8_t * const data_out, const std::size_t size_in, const std::size_t size_out) {
+  for (std::size_t i = 0; i < std::min(size_in, size_out); i++) {
+    data_out[i] = data_in[i];
+  }
+}
+
+#if 0
 template<>
 inline void ArrayFromBytes<uint16_t>(const uint8_t * const data_in, uint16_t * const data_out, const std::size_t size_in, const std::size_t size_out) {
   std::size_t data_out_count = 0;
@@ -293,5 +347,8 @@ inline void ArrayFromBytes<uint16_t>(const uint8_t * const data_in, uint16_t * c
     data_out[i] = Make_MSB_uint32_tFromU8Array(&data_in[i*sizeof(uint16_t)], sizeof(uint16_t));
   }
 }
+#endif
+
+
 }  //  namespace Utilities
 #endif  //  UTILITIES_TYPECONVERSION_H_
