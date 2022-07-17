@@ -96,6 +96,7 @@ endforeach()
 
 target_sources(tests PUBLIC ${DIR_SRCS})
 target_sources(tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/source/main.cpp)
+target_sources(tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/source/test_linear_fit.cpp)
 
 get_target_property( srcs tests SOURCES)
 foreach(src ${srcs})
@@ -109,8 +110,18 @@ target_link_libraries(tests pthread)
 target_include_directories(tests PUBLIC ${TESTSRC})
 target_include_directories(tests PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
+set(GTEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/googletest")
+target_include_directories(tests PUBLIC "${GTEST_DIR}/include")
+
 message(STATUS "Sources: ${DIR_SRCS}")
 add_test(NAME ${CMAKE_SOURCE_DIR} COMMAND tests)
+#----------------------------------------------------------------------
+# GTEST
+#----------------------------------------------------------------------
+target_include_directories(tests PUBLIC "${GTEST_DIR}/include")
+target_link_directories(tests PUBLIC ${GTEST_DIR}/../build/lib)
+target_link_libraries(tests gtest)
+target_link_libraries(tests pthread)
 
 #------------------------------------------------------------
 # Static Analysis
