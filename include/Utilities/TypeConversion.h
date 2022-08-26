@@ -7,7 +7,7 @@
 #ifndef UTILITIES_TYPECONVERSION_H_
 #define UTILITIES_TYPECONVERSION_H_
 
-#include <ArrayView/ArrayView.h>
+//#include <ArrayView/ArrayView.h>
 #include <algorithm>
 #include <array>
 #include <limits>
@@ -276,7 +276,7 @@ inline constexpr std::array<uint8_t, sizeof(uint32_t)> MakeU8Array(T t) {
   return MakeLSBU8Array<T>(t);
 }
 
-inline constexpr void
+inline void
 num2chars(uint32_t num,
           std::array<char, std::numeric_limits<uint32_t>::digits10> &buff) {
   const int base = 10;
@@ -317,11 +317,13 @@ inline void ArrayToBytes<uint8_t>(const uint8_t * const data_in, uint8_t * const
 
 
 template<typename T>
-inline void ConvertToBytes(const T& data, uint8_t* entry, const size_t length) {
-  const auto array = Utilities::MakeMSBU8Array<T>(data);
-  for (std::size_t i = 0; i < std::min(array.size(), length); i++) {
+inline size_t ConvertToBytes(const T& data, uint8_t* entry, const size_t length) {
+	  const auto array = Utilities::MakeMSBU8Array<T>(data);
+	const size_t chars = std::min(array.size(), length);
+  for (std::size_t i = 0; i < chars; i++) {
     entry[i] = array[i];
   }
+  return chars;
 }
 
 
