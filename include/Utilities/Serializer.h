@@ -49,13 +49,12 @@ class Serializer<T, true> {
 
 template<typename T>
 void write_as_type(uint8_t* storage, const size_t storage_length, const T* data, const size_t data_length) {
-  if (data_length * Serializer<T>::kStep < storage_length) {
-    assert(0);
-  } else {
-    for (size_t i=0; i<data_length; i++) {
-      const size_t offset = Serializer<T>::kStep * i;
-      Serializer<T>::serialize(&(storage[offset]), storage_length, data[i]);
-    }  
+  const size_t total_data_length = data_length * Serializer<T>::kStep;
+  assert(total_data_length <= storage_length);
+  const size_t length = std::min(storage_length, total_data_length);
+  for (size_t i=0; i<data_length; i++) {
+    const size_t offset = Serializer<T>::kStep * i;
+    Serializer<T>::serialize(&(storage[offset]), length, data[i]);
   }
 }
 
