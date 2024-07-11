@@ -5,6 +5,7 @@
 #define ALIGNED(x) __attribute__((aligned(x)))
 #include <array>
 #include <cassert>
+#include <cstdint>
 
 template <typename T, std::size_t kElements>
 class LightWeightRingBuffer {
