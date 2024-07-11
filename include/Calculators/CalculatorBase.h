@@ -7,13 +7,14 @@
 #define CALCULATORS_CALCULATORBASE_H_
 #include <Utilities/TypeConversion.h>
 #include <Utilities/math.h>
+
+#include <cassert>
+#include <cmath>
+#include <cstdint>
 #include <limits>
 #include <tuple>
 #include <type_traits>
 #include <utility>
-#include <cassert>
-#include <cmath>
-#include <cstdint>
 
 /**
  * Collection of the basic calculations needed for an embedded system
@@ -21,7 +22,8 @@
  *
  */
 namespace Utilities {
-template <typename T> inline constexpr T TranslateToMicro(const T value) {
+template <typename T>
+inline constexpr T TranslateToMicro(const T value) {
   const T kMicroScaleFactor = 1000 * 1000;
   return Utilities::round(value * kMicroScaleFactor);
 }
@@ -29,18 +31,20 @@ template <typename T> inline constexpr T TranslateToMicro(const T value) {
  * return a multiplier, shift, and micro error as an approximation of the
  * value value approx= m>>s
  */
-template <typename T> struct MultiplyShiftEstimateResult {
+template <typename T>
+struct MultiplyShiftEstimateResult {
   const T multiplier;
   const T shift;
   const T error;
-  constexpr MultiplyShiftEstimateResult(const T multiplier_in, const T shift_in, const T error_in) :
-    multiplier{multiplier_in}, shift{shift_in}, error{error_in} {}
+  constexpr MultiplyShiftEstimateResult(const T multiplier_in, const T shift_in,
+                                        const T error_in)
+      : multiplier{multiplier_in}, shift{shift_in}, error{error_in} {}
 };
 
 template <typename T>
-inline constexpr MultiplyShiftEstimateResult<T>
-MultiplyShiftEstimate(const double value, const std::size_t multiplier_max,
-                      const std::size_t shift_max) {
+inline constexpr MultiplyShiftEstimateResult<T> MultiplyShiftEstimate(
+    const double value, const std::size_t multiplier_max,
+    const std::size_t shift_max) {
   const auto abs_value = Utilities::abs(value);
   const auto dmultiplier_max = static_cast<double>(multiplier_max);
   const T kMicroScaleFactor = 1000 * 1000;
@@ -48,14 +52,16 @@ MultiplyShiftEstimate(const double value, const std::size_t multiplier_max,
   std::size_t shift = 0;
   double last_diff = kMicroScaleFactor * abs_value;
   for (std::size_t i = 0; i < shift_max; i++) {
-    const double value_shift = Utilities::round(abs_value * Utilities::pow(2, i));
-    const double approx_value = value_shift * Utilities::pow(2, -static_cast<double>(i));
-    const double diff = kMicroScaleFactor * Utilities::abs(abs_value - approx_value);
+    const double value_shift =
+        Utilities::round(abs_value * Utilities::pow(2, i));
+    const double approx_value =
+        value_shift * Utilities::pow(2, -static_cast<double>(i));
+    const double diff =
+        kMicroScaleFactor * Utilities::abs(abs_value - approx_value);
     if (value_shift > dmultiplier_max) {
       break;
     } else if (diff < last_diff) {
-      mult = static_cast<int32_t>(
-          Utilities::round(value_shift));
+      mult = static_cast<int32_t>(Utilities::round(value_shift));
       shift = i;
       last_diff = diff;
     }
@@ -65,11 +71,13 @@ MultiplyShiftEstimate(const double value, const std::size_t multiplier_max,
   if (value != abs_value) {
     mult *= -1;
   }
-  return MultiplyShiftEstimateResult<T>{mult, static_cast<T>(shift), cast_error};
+  return MultiplyShiftEstimateResult<T>{mult, static_cast<T>(shift),
+                                        cast_error};
 }
-} // namespace Utilities
+}  // namespace Utilities
 
-template <typename Output> class Calculator {
+template <typename Output>
+class Calculator {
  public:
   static const constexpr Output kMicroScaleFactor = 1000 * 1000;
   static const constexpr Output kMilliScaleFactor = 1000;
@@ -118,12 +126,13 @@ template <typename Output> class Calculator {
    * value into a voltage such as turing a DAC output into a voltage
    */
   template <typename Input>
-  static constexpr Output
-  ScaleDigitalValue(const Input value, const int bits_of_value,
-                    const Input scale_low, const Input scale_high) {
+  static constexpr Output ScaleDigitalValue(const Input value,
+                                            const int bits_of_value,
+                                            const Input scale_low,
+                                            const Input scale_high) {
     assert(scale_high > scale_low);
     if (bits_of_value <= 0) {
-      assert(0); //  invalid
+      assert(0);  //  invalid
       return 0;
     }
     const auto output_range = scale_high - scale_low;
@@ -142,12 +151,13 @@ template <typename Output> class Calculator {
    * into a digital value such as an ADC value or a DAC output
    */
   template <typename Input>
-  static constexpr Output
-  ScaleToDigitalValue(const Input value, const int bits_of_output,
-                      const Input scale_low, const Input scale_high) {
+  static constexpr Output ScaleToDigitalValue(const Input value,
+                                              const int bits_of_output,
+                                              const Input scale_low,
+                                              const Input scale_high) {
     assert(scale_high > scale_low);
     if (bits_of_output <= 0) {
-      assert(0); //  invalid
+      assert(0);  //  invalid
       return 0;
     }
     const auto output_range = scale_high - scale_low;
@@ -167,9 +177,10 @@ template <typename Output> class Calculator {
    * value, one potential and both resistors
    */
   template <typename Input>
-  static constexpr Output
-  TwoNodeVoltageDividerReverse(const Input v1, const Input v_node,
-                               const Input r1, const Input r2) {
+  static constexpr Output TwoNodeVoltageDividerReverse(const Input v1,
+                                                       const Input v_node,
+                                                       const Input r1,
+                                                       const Input r2) {
     const auto Positive = (v_node * (r1 + r2)) / r1;
     const auto Negative = (v1 * r2) / r1;
     assert(std::numeric_limits<Input>::is_signed || (Positive >= Negative));
@@ -196,9 +207,9 @@ template <typename Output> class Calculator {
    * - vnode = vp2_node)
    */
   template <typename Input>
-  static constexpr Output
-  TwoNodeVoltageDividerReverseFeedback(const Input v1, const Input vp2_node,
-                                       const Input r1, const Input rfeedback) {
+  static constexpr Output TwoNodeVoltageDividerReverseFeedback(
+      const Input v1, const Input vp2_node, const Input r1,
+      const Input rfeedback) {
     /*
      * v2 - vnode = vp2_node
      * (v2 - vnode)/rfeedback + (v1 - vnode)/r1 = 0
@@ -217,9 +228,9 @@ template <typename Output> class Calculator {
    */
   //  fixme add unsigned bit scaled function
   template <typename Input>
-  static constexpr Output
-  ThreeNodeVoltageDivider(const Input v1, const Input v2, const Input v3,
-                          const Input r1, const Input r2, const Input r3) {
+  static constexpr Output ThreeNodeVoltageDivider(
+      const Input v1, const Input v2, const Input v3, const Input r1,
+      const Input r2, const Input r3) {
     const auto sum = r2 * r3 * v1 + r1 * r3 * v2 + r1 * r2 * v3;
     const auto divider = (r1 * r2 + r1 * r3 + r2 * r3);
     const auto result = sum / divider;
@@ -231,10 +242,9 @@ template <typename Output> class Calculator {
    * and the three resistors
    */
   template <typename Input>
-  static constexpr Output
-  ThreeNodeVoltageDividerReversed(const Input v1, const Input v2,
-                                  const Input node, const Input r1,
-                                  const Input r2, const Input r3) {
+  static constexpr Output ThreeNodeVoltageDividerReversed(
+      const Input v1, const Input v2, const Input node, const Input r1,
+      const Input r2, const Input r3) {
     const auto divider = r1 * (r2 + r3) + r2 * r3;
     const auto sum = node * divider;
     const auto numerator_negative = r3 * (r2 * v1 + r1 * v2);
@@ -256,7 +266,7 @@ template <typename Output> class Calculator {
         const Input node_b_resistor, const Input output_fb_resistor) {
         //  Calculate the signal in voltage as a fuction of the
         //  center of a three node voltage divider
-        /* 
+        /*
            (nav - nv)/ra + (nbv - nv)/rb + (out - nv)/ofbr = 0
            out = ofbr((nv - nav)/ra + (nv - nbv)/rb) + nv
            out = ofbr(nv/ra - nav/ra + nv/rb - nvb/rb + nv/ofbr)
@@ -300,11 +310,12 @@ template <typename Output> class Calculator {
    * and vlow values are used to emulate the amplifier pegging
    */
   template <typename Input>
-  static constexpr Output
-  AmplifierOutput(const Input noninverting_value,
-                  const Input inverting_node_value,
-                  const Input inverting_node_resistor, const Input fb_resistor,
-                  const Input vhigh, const Input vlow = 0) {
+  static constexpr Output AmplifierOutput(const Input noninverting_value,
+                                          const Input inverting_node_value,
+                                          const Input inverting_node_resistor,
+                                          const Input fb_resistor,
+                                          const Input vhigh,
+                                          const Input vlow = 0) {
     const auto Negative =
         (inverting_node_value * fb_resistor) / inverting_node_resistor;
     const auto Positive =
@@ -358,9 +369,8 @@ template <typename Output> class Calculator {
   }
 
   template <typename Input>
-  static constexpr Output
-  NonInvertingAmplifierGain(const Input inverting_node_resistor,
-                            const Input fb_resistor) {
+  static constexpr Output NonInvertingAmplifierGain(
+      const Input inverting_node_resistor, const Input fb_resistor) {
     const auto numerator = (fb_resistor + inverting_node_resistor);
     const auto out = numerator / inverting_node_resistor;
     return Utilities::StaticCastQuickFail<Output>(out);
@@ -392,4 +402,4 @@ const Input input_resistor, const Output kScale = 1, const Output kValueScale =
 1);
 */
 
-#endif //  CALCULATORS_CALCULATORBASE_H_
+#endif  //  CALCULATORS_CALCULATORBASE_H_

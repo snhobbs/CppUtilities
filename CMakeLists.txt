@@ -34,4 +34,3 @@ configure_file(PackageConfigVersion.cmake.in
 
 #-----------------------------------------------------------------------------
 add_subdirectory(tests)
-

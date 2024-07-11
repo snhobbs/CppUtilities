@@ -18,53 +18,38 @@ public:
   }
 };
 #else
-template<typename T>
+template <typename T>
 class ArrayView {
-    const std::size_t length_;
-    T* const pointer_;
+  const std::size_t length_;
+  T* const pointer_;
 
  public:
-    [[deprecated]]
-    std::size_t Size(void) const { return length_; }
-    std::size_t size(void) const { return length_; }
-    T& at(std::size_t index) {
-        assert(index <= size());
-        return pointer_[index < size() ? index : 0];
-    }
-    const T& at(std::size_t index) const {
-        assert(index <= size());
-        return pointer_[index < size() ? index : 0];
-    }
-    const T& operator[](std::size_t index) const {
-        return at(index);
-    }
-    T& operator[](std::size_t index) {
-        assert(index <= size());
-        return pointer_[index < size() ? index : 0];
-    }
-    const T* begin(void) const {
-        return pointer_;
-    }
-    const T* end(void) const {
-        return begin() + size();
-    }
-    T* begin(void) {
-        return pointer_;
-    }
-    T* end(void) {
-        return begin() + size();
-    }
-    const T* data(void) const noexcept {
-        return begin();
-    }
-    T* data(void) noexcept {
-        return begin();
-    }
+  [[deprecated]] std::size_t Size(void) const { return length_; }
+  std::size_t size(void) const { return length_; }
+  T& at(std::size_t index) {
+    assert(index <= size());
+    return pointer_[index < size() ? index : 0];
+  }
+  const T& at(std::size_t index) const {
+    assert(index <= size());
+    return pointer_[index < size() ? index : 0];
+  }
+  const T& operator[](std::size_t index) const { return at(index); }
+  T& operator[](std::size_t index) {
+    assert(index <= size());
+    return pointer_[index < size() ? index : 0];
+  }
+  const T* begin(void) const { return pointer_; }
+  const T* end(void) const { return begin() + size(); }
+  T* begin(void) { return pointer_; }
+  T* end(void) { return begin() + size(); }
+  const T* data(void) const noexcept { return begin(); }
+  T* data(void) noexcept { return begin(); }
 
-    ArrayView(std::size_t length, T* pointer) :
-        length_{length}, pointer_{pointer} {
-            assert(length >= 0);
-        }
+  ArrayView(std::size_t length, T* pointer)
+      : length_{length}, pointer_{pointer} {
+    assert(length >= 0);
+  }
 };
 #endif
 

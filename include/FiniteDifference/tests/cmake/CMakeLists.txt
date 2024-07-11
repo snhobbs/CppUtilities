@@ -51,4 +51,3 @@ target_link_libraries( ${PROJECT_NAME} UnitTest++)
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJ_SRC} )
 target_include_directories(${PROJECT_NAME} PRIVATE ${TESTSRC} )
 target_include_directories(${PROJECT_NAME} PRIVATE ${CORTEXLIBS} )
-

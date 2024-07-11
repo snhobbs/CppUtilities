@@ -10,22 +10,22 @@
 
 namespace Utilities {
 #ifdef __clang__
-using sprout::math::exp; 
+using sprout::math::ceil;
+using sprout::math::exp;
+using sprout::math::floor;
 using sprout::math::log;
 using sprout::math::pow;
-using sprout::math::floor;
-using sprout::math::ceil;
 //  using sprout::math::round;
 //  using sprout::math::abs;
-//  using exp = sprout::math::detail::exp; 
+//  using exp = sprout::math::detail::exp;
 //  using log = sprout::math::detail::log;
 
 #else
-using std::exp; 
+using std::ceil;
+using std::exp;
+using std::floor;
 using std::log;
 using std::pow;
-using std::floor;
-using std::ceil;
 //  using std::round;
 //  using std::abs;
 #endif
@@ -66,7 +66,8 @@ inline constexpr T round(const T value) {
 #endif
 }
 
-template<typename T> inline constexpr T abs(const T t) {
+template <typename T>
+inline constexpr T abs(const T t) {
 #ifdef __clang__
   return t > 0 ? t : -t;
 #else
@@ -74,7 +75,7 @@ template<typename T> inline constexpr T abs(const T t) {
 #endif
 }
 
-template<typename T>
+template <typename T>
 constexpr T AbsDiff(const T a, const T b) {
   return a > b ? a - b : b - a;
 }

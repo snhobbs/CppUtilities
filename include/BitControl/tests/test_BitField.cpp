@@ -10,13 +10,15 @@
  * ----------------------------------------------------------------------
  */
 
-#include "../BitField.h"
 #include <gtest/gtest.h>
-#include <iostream>
-#include <vector>
+
 #include <array>
 #include <cassert>
 #include <cstdint>
+#include <iostream>
+#include <vector>
+
+#include "../BitField.h"
 
 namespace Tests {
 struct CoilDataFixture : public ::testing::Test {
@@ -24,7 +26,7 @@ struct CoilDataFixture : public ::testing::Test {
   BitField<kCoilCount> dc{};
 };
 TEST_F(CoilDataFixture, BitFieldRead) {
-    for (std::size_t address = 0; address < dc.size(); address++) {
+  for (std::size_t address = 0; address < dc.size(); address++) {
     dc.WriteElement(address, true);
     EXPECT_TRUE(dc.ReadElement(address) == true);
     dc.WriteElement(address, false);
@@ -105,4 +107,4 @@ TEST_F(CoilControllerArbitraryDataFixture, CoilControllerReadWriteMulti) {
   }
 }
 #endif
-}
+}  // namespace Tests

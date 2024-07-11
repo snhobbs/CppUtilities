@@ -1,8 +1,9 @@
 /*
  * Copyright 2020 Electrooptical Innovations
  * */
-#include <gtest/gtest.h> 
 #include <Calculators/CalculatorBase.h>
+#include <gtest/gtest.h>
+
 #include <cassert>
 #include <cstdint>
 #include <iostream>
@@ -10,7 +11,7 @@
 #include <typeinfo>
 #include <vector>
 
-#define PRINT(x)                                                               \
+#define PRINT(x) \
   { std::cout << x << "\n"; }
 
 TEST(Calculator, ScaleDigitalValue) {
@@ -41,7 +42,8 @@ TEST(Calculator, ScaleToDigitalValue) {
         int64_t value = Calculator<int64_t>::ScaleDigitalValue<int64_t>(
             i, kBits, static_cast<int64_t>(low), static_cast<int64_t>(high));
         int64_t scaled = Calculator<int64_t>::ScaleToDigitalValue<int64_t>(
-            value, kBits, static_cast<int64_t>(low), static_cast<int64_t>(high));
+            value, kBits, static_cast<int64_t>(low),
+            static_cast<int64_t>(high));
 
         EXPECT_EQ(i, scaled);
       }
@@ -75,10 +77,11 @@ TEST(Calculator, MultipyShiftEstimate) {
   double values[] = {-100,   -0.22222, 0.111199,  0,        0.1,
                      0.1313, 123.4545, 234.34230, 10000.999};
   for (auto pt : values) {
-    auto out = Utilities::MultiplyShiftEstimate<int32_t>(pt, kMultMax, kShiftMax);
-    //std::cout << pt << "\t" << out.error << "\n";
+    auto out =
+        Utilities::MultiplyShiftEstimate<int32_t>(pt, kMultMax, kShiftMax);
+    // std::cout << pt << "\t" << out.error << "\n";
     if (pt != 0) {
-      EXPECT_LT(static_cast<double>(out.error)/pt, 1e5);
+      EXPECT_LT(static_cast<double>(out.error) / pt, 1e5);
     } else {
       EXPECT_LT(out.error, 1e5);
     }
@@ -129,8 +132,8 @@ TEST(Calculator, ThreeNodeVoltageDivider) {
 }
 
 TEST(Calculator, ThreeNodeVoltageDividerReversed) {
-  constexpr double node_value = 1; // 1v
-  double node_a_value = 0;         // gnd
+  constexpr double node_value = 1;  // 1v
+  double node_a_value = 0;          // gnd
   constexpr double node_a_resistor = 11e3;
   constexpr double node_b_resistor = 20.4e3;
   constexpr double output_fb_resistor = 36e3;
@@ -189,8 +192,7 @@ TEST(Calculator, NonInvertingAmplifier) {
     double input_calculated =
         Calculator<double>::CalculateNoneInvertingInputFromAmplifierOutput<
             double>(inverting_value, output, resistor_in, fb_resistor);
-    if (output >= high || output <= low)
-      continue;
+    if (output >= high || output <= low) continue;
     EXPECT_NEAR(noninverting_value, input_calculated, 0.0001);
     EXPECT_GT(output, last);
     last = output;

@@ -5,8 +5,8 @@
 #ifndef UTILITIES_CRC_H_
 #define UTILITIES_CRC_H_
 #include <array>
-#include <cstdint>
 #include <cassert>
+#include <cstdint>
 
 namespace Utilities {
 
@@ -21,7 +21,8 @@ inline constexpr uint8_t LinearRedundancyCheck(const uint8_t *const buffer,
                                                const std::size_t data_length) {
   const uint8_t kMask = 0xff;
   uint8_t lrc = 0;
-  for (std::size_t current_byte = 0; current_byte < data_length; current_byte++) {
+  for (std::size_t current_byte = 0; current_byte < data_length;
+       current_byte++) {
     lrc = static_cast<uint16_t>((lrc + buffer[current_byte]) & kMask);
     lrc = static_cast<uint16_t>(((lrc ^ 0xFF) + 1) & kMask);
   }
@@ -32,7 +33,8 @@ inline constexpr uint16_t crc16(const uint8_t *const buffer,
                                 const std::size_t data_length) {
   const constexpr std::size_t crc16_polynomial = 0xA001;
   uint16_t crc = 0xffff;
-  for (std::size_t current_byte = 0; current_byte < data_length; current_byte++) {
+  for (std::size_t current_byte = 0; current_byte < data_length;
+       current_byte++) {
     crc = static_cast<uint16_t>(crc ^ buffer[current_byte]);
     for (uint8_t j = 0; j < 8; j++) {
       if (crc & 0x0001) {
@@ -45,7 +47,7 @@ inline constexpr uint16_t crc16(const uint8_t *const buffer,
   return static_cast<uint16_t>(crc << 8 | crc >> 8);
 }
 
-template<typename T>
+template <typename T>
 inline uint16_t crc16(const T &array, std::size_t length) {
   assert(length <= array.size());
   return Utilities::crc16(array.data(), length);
@@ -75,10 +77,12 @@ static_assert(reflect_byte(0b00001111) == 0b11110000);
 static_assert(reflect_byte(0b10001111) == 0b11110001);
 
 inline constexpr uint8_t crc_uint8(const uint8_t *const buffer,
-      const std::size_t data_length, const Crc8Setting& settings) {
+                                   const std::size_t data_length,
+                                   const Crc8Setting &settings) {
   uint8_t crc = settings.initial_value;
   /* calculates 8-Bit checksum with given polynomial */
-  for (std::size_t current_byte = 0; current_byte < data_length; current_byte++) {
+  for (std::size_t current_byte = 0; current_byte < data_length;
+       current_byte++) {
     uint8_t byte = buffer[current_byte];
     if (settings.reflect_in) {
       byte = reflect_byte(byte);
@@ -96,9 +100,9 @@ inline constexpr uint8_t crc_uint8(const uint8_t *const buffer,
   if (settings.reflect_out) {
     crc = reflect_byte(crc);
   }
-  return crc^settings.final_xor;
+  return crc ^ settings.final_xor;
 }
 
-} //  namespace Utilities
+}  //  namespace Utilities
 
-#endif //  UTILITIES_CRC_H_
+#endif  //  UTILITIES_CRC_H_
