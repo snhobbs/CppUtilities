@@ -31,9 +31,7 @@ class LightWeightRingBuffer {
   uint32_t GetHead(void) const { return MaskIndex(head); }
 
   bool isEmpty(void) const { return head == tail; }
-  bool isFull(void) const {
-    return !isEmpty() && (GetHead() == GetTail());
-  }
+  bool isFull(void) const { return !isEmpty() && (GetHead() == GetTail()); }
 
   std::size_t pop(T *const out, const std::size_t count) {
     std::size_t popped = 0;
@@ -65,7 +63,6 @@ class LightWeightRingBuffer {
     }
     *out = buffer_[ArrayPos];
   }
-
 
   std::size_t insert(const T *const in, const std::size_t count) {
     std::size_t inserted = 0;
@@ -113,7 +110,6 @@ class LightWeightRingBuffer {
   static constexpr std::size_t size(void) { return kElements; }
 
   constexpr LightWeightRingBuffer(void) {}
-  LightWeightRingBuffer(const LightWeightRingBuffer&) = delete;
-  LightWeightRingBuffer operator=(const LightWeightRingBuffer&) = delete;
+  LightWeightRingBuffer(const LightWeightRingBuffer &) = delete;
+  LightWeightRingBuffer operator=(const LightWeightRingBuffer &) = delete;
 };
-

@@ -13,4 +13,3 @@ Header blocks are ARM style:
  * Target Processor: Cortex-M cores
  * ----------------------------------------------------------------------
  */
-

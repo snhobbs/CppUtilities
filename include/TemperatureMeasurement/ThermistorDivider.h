@@ -8,6 +8,7 @@
 
 #include <Calculators/CalculatorBase.h>
 #include <Calculators/ThermistorCalculator.h>
+
 #include <array>
 #include <cassert>
 #include <cmath>
@@ -31,19 +32,28 @@ struct InterpolatedTemperatureLine {
   int32_t DeltaTByDeltaADCSlope = 0;
 };
 
-
-template <int32_t kAdcBits, int32_t kThermistorMicroVolts, int32_t kFixedMicroVolts,
-    int32_t kAdcReferenceMicroVolts, int32_t kFixedResistor, int32_t kT0Celsius,
-	int32_t kBFactor, int32_t kR0>
-inline constexpr int32_t TemperatureToAdcTwoNodeThermistor(const double kelvin) {
-  const auto r_inf = Utilities::TemperatureCalculator::Calculate_r_inf(kR0, kBFactor, kT0Celsius);
+template <int32_t kAdcBits, int32_t kThermistorMicroVolts,
+          int32_t kFixedMicroVolts, int32_t kAdcReferenceMicroVolts,
+          int32_t kFixedResistor, int32_t kT0Celsius, int32_t kBFactor,
+          int32_t kR0>
+inline constexpr int32_t TemperatureToAdcTwoNodeThermistor(
+    const double kelvin) {
+  const auto r_inf = Utilities::TemperatureCalculator::Calculate_r_inf(
+      kR0, kBFactor, kT0Celsius);
   assert(r_inf > 0);
-  const auto thermistor_resistance = Utilities::TemperatureCalculator::ResistanceFromTemperature(kelvin, kBFactor, r_inf);
-  const auto thermistor_resistance_rounded = Utilities::round<decltype(thermistor_resistance), int64_t>(thermistor_resistance);
-  const auto thermistor_resistance_int = Utilities::StaticCastQuickFail<int64_t>(thermistor_resistance_rounded);
+  const auto thermistor_resistance =
+      Utilities::TemperatureCalculator::ResistanceFromTemperature(
+          kelvin, kBFactor, r_inf);
+  const auto thermistor_resistance_rounded =
+      Utilities::round<decltype(thermistor_resistance), int64_t>(
+          thermistor_resistance);
+  const auto thermistor_resistance_int =
+      Utilities::StaticCastQuickFail<int64_t>(thermistor_resistance_rounded);
   assert(thermistor_resistance_int > 0);
-  const auto node_micro_volts = Calculator<int64_t>::TwoNodeVoltageDivider<int64_t>(
-          kThermistorMicroVolts, kFixedMicroVolts, thermistor_resistance_int, kFixedResistor);
+  const auto node_micro_volts =
+      Calculator<int64_t>::TwoNodeVoltageDivider<int64_t>(
+          kThermistorMicroVolts, kFixedMicroVolts, thermistor_resistance_int,
+          kFixedResistor);
   const int32_t adc_value = Calculator<int32_t>::ScaleToDigitalValue<int64_t>(
       node_micro_volts, kAdcBits, 0, kAdcReferenceMicroVolts);
   //  assert(adc_value < (1<<kAdcBits));
@@ -51,7 +61,8 @@ inline constexpr int32_t TemperatureToAdcTwoNodeThermistor(const double kelvin) 
 }
 
 //  todo need to do something to handle different temps being the same adc value
-template <int32_t kTCelsiusStart, int32_t kTCelsiusEnd, uint32_t kNumPoints, typename F>
+template <int32_t kTCelsiusStart, int32_t kTCelsiusEnd, uint32_t kNumPoints,
+          typename F>
 class TemperatureTableMaker {
   static const constexpr auto kNumIntervals = (kNumPoints - 1);
   static_assert(kTCelsiusStart < kTCelsiusEnd, "Not increasing");
@@ -61,7 +72,8 @@ class TemperatureTableMaker {
   static_assert(kTemperatureStepSize * kNumIntervals + kTCelsiusStart ==
                 kTCelsiusEnd);
 
-  static constexpr void SetSlopeBetweenPoints(std::array<InterpolatedTemperatureLine, kNumPoints>* arr) {
+  static constexpr void SetSlopeBetweenPoints(
+      std::array<InterpolatedTemperatureLine, kNumPoints>* arr) {
     for (std::size_t i = 0; i < arr->size() - 1; i++) {
       const double adc_reading = arr->at(i).adc_reading;
       const double next_adc_reading = arr->at(i + 1).adc_reading;
@@ -82,8 +94,8 @@ class TemperatureTableMaker {
   /*
    * Generate an array of interpolation points with slopes between them
    * */
-  static constexpr std::array<InterpolatedTemperatureLine, kNumPoints>
-  GetTable(F TemperatureToAdc) {
+  static constexpr std::array<InterpolatedTemperatureLine, kNumPoints> GetTable(
+      F TemperatureToAdc) {
     std::array<InterpolatedTemperatureLine, kNumPoints> arr;
 
     for (std::size_t i = 0; i < arr.size(); i++) {
@@ -102,15 +114,14 @@ class TemperatureTableMaker {
 };
 
 class ThermistorDividerBase {
- //protected:
+  // protected:
  public:
-  static constexpr std::size_t 
-  FindMatchingIndexLower(const std::size_t index,
-                         const InterpolatedTemperatureLine *const table,
-                         const std::size_t array_size) {
+  static constexpr std::size_t FindMatchingIndexLower(
+      const std::size_t index, const InterpolatedTemperatureLine* const table,
+      const std::size_t array_size) {
     const int32_t adc_reading = static_cast<int32_t>(index);
     for (std::size_t i = 0; i < array_size; i++) {
-      if (table[i].adc_reading < adc_reading) { //  table is decreasing in adc
+      if (table[i].adc_reading < adc_reading) {  //  table is decreasing in adc
         return i;
       }
     }
@@ -118,10 +129,9 @@ class ThermistorDividerBase {
     return array_size - 1;
   }
 
-  static constexpr std::size_t
-  FindClosestMatchingIndex(const std::size_t index,
-                           const InterpolatedTemperatureLine *const table,
-                           const std::size_t array_size) {
+  static constexpr std::size_t FindClosestMatchingIndex(
+      const std::size_t index, const InterpolatedTemperatureLine* const table,
+      const std::size_t array_size) {
     const int32_t adc_reading = static_cast<int32_t>(index);
     int32_t last_error = std::numeric_limits<int32_t>::max();
     std::size_t i = 0;
@@ -143,9 +153,8 @@ class ThermistorDividerBase {
     return array_size - 1;
   }
 
-  static constexpr int32_t
-  InterpolatePoint(const int32_t adc_reading, const InterpolatedTemperatureLine& pt_close) {
-
+  static constexpr int32_t InterpolatePoint(
+      const int32_t adc_reading, const InterpolatedTemperatureLine& pt_close) {
     //  assert(lower_match_index);
     const int32_t step_size = (adc_reading - pt_close.adc_reading);
     const int32_t gain_calc =
@@ -156,5 +165,5 @@ class ThermistorDividerBase {
   }
 };
 
-} //  namespace TemperatureMeasurement
+}  //  namespace TemperatureMeasurement
 #endif  //  TEMPERATUREMEASUREMENT_THERMISTORDIVIDER_H_

@@ -7,11 +7,14 @@
 
 #define ALIGNED(x) __attribute__((aligned(x)))
 #include <ArrayView/ArrayView.h>
-#include <array>
 #include <assert.h>
+
+#include <array>
+
 #include "LightweightRingBuffer.h"
 
-template <typename T> class Buffer {
+template <typename T>
+class Buffer {
  public:
   virtual bool isEmpty(void) const = 0;
   virtual bool isFull(void) const = 0;
@@ -32,13 +35,9 @@ template <typename T, std::size_t kElements>
 class RingBuffer final : public Buffer<T> {
  public:
   virtual bool isEmpty(void) const { return buffer_.isEmpty(); }
-  virtual bool isFull(void) const {
-    return buffer_.isFull();
-  }
+  virtual bool isFull(void) const { return buffer_.isFull(); }
 
-  virtual std::size_t pop(T *out) {
-    return buffer_.pop(out);
-  }
+  virtual std::size_t pop(T *out) { return buffer_.pop(out); }
 
   [[deprecated]] virtual std::size_t pop(T &out) { return pop(&out); }
 
@@ -46,9 +45,7 @@ class RingBuffer final : public Buffer<T> {
     return buffer_.pop(out, count);
   }
 
-  virtual std::size_t insert(const T &in) {
-    return buffer_.insert(in);
-  }
+  virtual std::size_t insert(const T &in) { return buffer_.insert(in); }
 
   virtual std::size_t insert(const T *const in, const std::size_t count) {
     return buffer_.insert(in, count);
@@ -58,19 +55,13 @@ class RingBuffer final : public Buffer<T> {
     return buffer_.insertOverwrite(in);
   }
 
-  void peek(T *out, const std::size_t pos) const {
-    buffer_.peek(out, pos);
-  }
+  void peek(T *out, const std::size_t pos) const { buffer_.peek(out, pos); }
 
-  virtual void Reset(void) {
-    buffer_.reset();
-  }
+  virtual void Reset(void) { buffer_.reset(); }
 
   [[deprecated]] void reset() { Reset(); }
 
-  virtual std::size_t GetCount(void) const {
-    return buffer_.GetCount();
-  }
+  virtual std::size_t GetCount(void) const { return buffer_.GetCount(); }
   static constexpr std::size_t GetSize(void) { return kElements; }
   static constexpr std::size_t frameSize(void) { return GetSize(); }
 
@@ -86,4 +77,4 @@ class RingBuffer final : public Buffer<T> {
   LightWeightRingBuffer<T, kElements> buffer_;
 };
 
-#endif //  RINGBUFFER_RINGBUFFER_H_
+#endif  //  RINGBUFFER_RINGBUFFER_H_

@@ -12,7 +12,8 @@
 
 #include <RingBuffer/RingBuffer.h>
 
-template <typename T> class SingleElementQueueBase {
+template <typename T>
+class SingleElementQueueBase {
  public:
   void Reset(void) { empty_ = true; }
   bool isEmpty(void) const { return empty_; }
@@ -35,9 +36,7 @@ template <typename T> class SingleElementQueueBase {
     return 1;
   }
 
-  uint32_t GetCount(void) const {
-    return empty_ ? 0 : size();
-  }
+  uint32_t GetCount(void) const { return empty_ ? 0 : size(); }
   uint32_t size(void) const { return 1; }
 
  private:
@@ -45,7 +44,8 @@ template <typename T> class SingleElementQueueBase {
   T data_{};
 };
 
-template <typename T> class SingleElementQueue : public Buffer<T> {
+template <typename T>
+class SingleElementQueue : public Buffer<T> {
  public:
   virtual void Reset(void) { buffer_.reset(); }
   virtual bool isEmpty(void) const { return buffer_.isEmpty(); }
@@ -58,9 +58,7 @@ template <typename T> class SingleElementQueue : public Buffer<T> {
     return buffer_.insert(in, count);
   }
   [[deprecated]] virtual uint32_t insert(const T &in) { return insert(&in, 1); }
-  virtual uint32_t GetCount(void) const {
-    return buffer_.GetCount();
-  }
+  virtual uint32_t GetCount(void) const { return buffer_.GetCount(); }
   virtual uint32_t Size(void) const { return buffer_.size(); }
 
   constexpr SingleElementQueue(void) {}
@@ -73,4 +71,4 @@ template <typename T> class SingleElementQueue : public Buffer<T> {
   SingleElementQueueBase<T> buffer_;
 };
 
-#endif // RINGBUFFER_SINGLEELEMENTQUEUE_H_
+#endif  // RINGBUFFER_SINGLEELEMENTQUEUE_H_

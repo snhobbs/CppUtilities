@@ -61,4 +61,3 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${PROJ_SRC} )
 target_include_directories(${PROJECT_NAME} PRIVATE ${TESTSRC} )
 target_include_directories(${PROJECT_NAME} PRIVATE ${CORTEXLIBS} )
 target_include_directories(${PROJECT_NAME} PRIVATE ${DEVICELIBS} )
-

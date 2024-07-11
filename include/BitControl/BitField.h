@@ -1,21 +1,23 @@
+#include <ArrayView/ArrayView.h>
 #include <Utilities/CommonTypes.h>
 #include <Utilities/TypeConversion.h>
-#include <ArrayView/ArrayView.h>
+
 #include <cstdint>
 
-template<std::size_t kElements> 
+template <std::size_t kElements>
 class BitField {
   static const std::size_t kByteSize = 8;
   static const constexpr std::size_t kLog2Of8 = 3;
   static_assert(1 << kLog2Of8 == 8);
   // static const constexpr std::size_t kDataBytes = kSize / 8 + 1;
   static const constexpr std::size_t kByteCount =
-        Utilities::CalcNumberOfBytesToFitBits(kElements);
+      Utilities::CalcNumberOfBytesToFitBits(kElements);
 
-  std::array<uint8_t, kByteCount> data_store_ __attribute__((aligned (sizeof(std::size_t))));
+  std::array<uint8_t, kByteCount> data_store_
+      __attribute__((aligned(sizeof(std::size_t))));
 
  public:
-  static std::size_t size(void) {return GetSize();}
+  static std::size_t size(void) { return GetSize(); }
   static constexpr std::size_t GetSize(void) { return kElements; }
   static constexpr std::size_t GetDataArrayIndex(std::size_t address) {
     return address >> kLog2Of8;
@@ -71,4 +73,3 @@ class BitField {
     }
   }
 };
-
