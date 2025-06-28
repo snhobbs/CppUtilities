@@ -4,6 +4,3 @@
 [submodule "tests/CMakeStaticAnalysis"]
 	path = tests/CMakeStaticAnalysis
 	url = git@github.com:snhobbs/CMakeStaticAnalysis.git
-[submodule "include/CooperativeScheduler"]
-	path = include/CooperativeScheduler
-	url = git@github.com:snhobbs/CooperativeScheduler.git

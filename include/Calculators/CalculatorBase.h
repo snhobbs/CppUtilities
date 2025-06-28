@@ -97,7 +97,7 @@ class Calculator {
 
   template <typename T>
   static constexpr Output TranslateToMicro(const T value) {
-    return static_cast<Output>(Utilities::round(value * kMicroScaleFactor));
+    return static_cast<Output>(Utilities::round(static_cast<float>(value * kMicroScaleFactor)));
   }
 
   template <typename T>

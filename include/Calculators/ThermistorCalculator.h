@@ -32,7 +32,7 @@ inline constexpr double CelsiusToKelvin(const double celsius) {
 namespace TemperatureCalculator {
 inline constexpr double Calculate_r_inf(const double R0, const double BFactor,
                                         const double temp0_celsius) {
-  return R0 * Utilities::exp(-BFactor / (CelsiusToKelvin(temp0_celsius)));
+  return R0 * Utilities::exp(static_cast<float>(-BFactor / (CelsiusToKelvin(temp0_celsius))));
 }
 
 inline constexpr int32_t Calculate_r_inf_micro_ohms(double R0, double BFactor,
@@ -44,7 +44,7 @@ inline constexpr int32_t Calculate_r_inf_micro_ohms(double R0, double BFactor,
 inline constexpr double TemperatureFromResistance(double resistance,
                                                   double BFactor,
                                                   double r_inf) {
-  return BFactor / Utilities::log(resistance / r_inf);
+  return BFactor / Utilities::log(static_cast<float>(resistance / r_inf));
 }
 
 inline constexpr double ResistanceFromTemperature(double kelvin, double BFactor,
