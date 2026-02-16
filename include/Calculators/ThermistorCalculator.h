@@ -37,7 +37,7 @@ inline constexpr double Calculate_r_inf(const double R0, const double BFactor,
 
 inline constexpr int32_t Calculate_r_inf_micro_ohms(double R0, double BFactor,
                                                     double temp0_celsius) {
-  return Calculator<int32_t>::TranslateToMicro<double>(
+  return Calculator::TranslateToMicro<int32_t, double>(
       Calculate_r_inf(R0, BFactor, temp0_celsius));
 }
 
@@ -66,6 +66,7 @@ static_assert(TemperatureFromResistance(10000, kBFactorTest, kRInfTest) <=
 static_assert(TemperatureFromResistance(10000, kBFactorTest, kRInfTest) >=
                   CelsiusToKelvin(24.99),
               "");
+
 
 }  //  namespace TemperatureCalculator
 }  //  namespace Utilities
