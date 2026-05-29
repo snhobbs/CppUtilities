@@ -57,6 +57,11 @@ inline constexpr T round(const T value) {
   return std::round(value);
 }
 
+template <typename Input, typename Output>
+inline constexpr Output round(const Input value) {
+  return static_cast<Output>(std::round(value));
+}
+
 
 template <typename T>
 inline constexpr T abs(const T t) {

@@ -51,11 +51,14 @@ inline constexpr int32_t TemperatureToAdcTwoNodeThermistor(
       Utilities::StaticCastQuickFail<int64_t>(thermistor_resistance_rounded);
   assert(thermistor_resistance_int > 0);
   const auto node_micro_volts =
-      Calculator<int64_t>::TwoNodeVoltageDivider<int64_t>(
-          kThermistorMicroVolts, kFixedMicroVolts, thermistor_resistance_int,
-          kFixedResistor);
-  const int32_t adc_value = Calculator<int32_t>::ScaleToDigitalValue<int64_t>(
-      node_micro_volts, kAdcBits, 0, kAdcReferenceMicroVolts);
+      Calculator::TwoNodeVoltageDivider<int64_t>(
+          static_cast<int64_t>(kThermistorMicroVolts),
+          static_cast<int64_t>(kFixedMicroVolts),
+          thermistor_resistance_int,
+          static_cast<int64_t>(kFixedResistor));
+  const int32_t adc_value = Calculator::ScaleToDigitalValue<int64_t>(
+      node_micro_volts, static_cast<int>(kAdcBits),
+      int64_t{0}, static_cast<int64_t>(kAdcReferenceMicroVolts));
   //  assert(adc_value < (1<<kAdcBits));
   return adc_value;
 }
@@ -105,7 +108,7 @@ class TemperatureTableMaker {
       arr[i].adc_reading = Utilities::StaticCastQuickFail<int32_t>(adc_reading);
       arr[i].t0 = Utilities::StaticCastQuickFail<int32_t>(
           Utilities::round<double, int32_t>(
-              Calculator<double>::TranslateToMicro(t)));
+              Calculator::TranslateToMicro<double>(t)));
     }
 
     SetSlopeBetweenPoints(&arr);

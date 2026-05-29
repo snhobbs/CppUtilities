@@ -34,22 +34,26 @@ class Thermistor : public TemperatureMeasurement::ThermistorDividerBase {
           kAdcReferenceMicroVolts, kRPullup, kT0Celsius, kBFactor, kR0>;
 
  public:
-  static constexpr const auto kTable =
+  // Table is computed at runtime on non-clang compilers (std::exp is not
+  // constexpr before C++23). The firmware static_asserts verify compile-time
+  // correctness on the target toolchain.
+  inline static const auto kTable =
       TemperatureMeasurement::TemperatureTableMaker<
           kTemperatureStart, kTemperatureEnd, kNumPoints,
           decltype(temperature_to_adc)>::GetTable(temperature_to_adc);
 
-  static constexpr int32_t GetMicroCelsiusFromAdcReading(uint32_t adc_reading) {
+  static int32_t GetMicroCelsiusFromAdcReading(uint32_t adc_reading) {
     const auto close_index = FindMatchingIndex(adc_reading);
     return InterpolatePoint(adc_reading, kTable[close_index]);
   }
-  static constexpr std::size_t FindLowerMatchingIndex(std::size_t index) {
+  static std::size_t FindLowerMatchingIndex(std::size_t index) {
     return FindMatchingIndexLower(index, kTable.data(), kTable.size());
   }
-  static constexpr std::size_t FindMatchingIndex(std::size_t index) {
+  static std::size_t FindMatchingIndex(std::size_t index) {
     return FindClosestMatchingIndex(index, kTable.data(), kTable.size());
   }
 };
+
 
 #if 0
 TEST(TableValues) {

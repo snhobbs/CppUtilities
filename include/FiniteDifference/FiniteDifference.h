@@ -13,6 +13,8 @@
 #include <array>
 #include <cassert>
 
+enum class BootStage { kWindow0 = 0, kWindow1 = 1, kWindow2 = 2, kDone = 3 };
+
 class SecFiniteDif {
  public:
   static const size_t kSecondDerivOrder = 2;
@@ -99,6 +101,23 @@ class SecFiniteDif {
     }
     return windows[2];
   }
+  int32_t get_newest_boxcar() const {
+    // When primed, windows[size-1] is filling; windows[size-2] is the last
+    // completed window. Before primed, windows[window_index_] is accumulating.
+    if (is_primed()) return windows[windows.size() - 2];
+    return window_index_ > 0 ? windows[window_index_ - 1] : 0;
+  }
+
+  BootStage get_status() const {
+    if (is_primed()) return BootStage::kDone;
+    switch (window_index_) {
+      case 0:  return BootStage::kWindow0;
+      case 1:  return BootStage::kWindow1;
+      case 2:  return BootStage::kWindow2;
+      default: return BootStage::kDone;
+    }
+  }
+
   SecFiniteDif(const size_t box_car_length = 0)
       : boxcar_length_{box_car_length} {}
 };

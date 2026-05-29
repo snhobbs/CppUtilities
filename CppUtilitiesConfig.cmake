@@ -6,4 +6,4 @@
 
 # Compute paths
 get_filename_component("CPPUTILITIES_CMAKE_DIR" "${CMAKE_CURRENT_LIST_FILE}" PATH)
-set("CPPUTILITIES_INCLUDE_DIRS" "/home/simon/software/CppUtilities;/home/simon/software/CppUtilities")
+set("CPPUTILITIES_INCLUDE_DIRS" "/home/simon/projects/eoi-document-generator/LC120MiniBoardFirmware/libs/CppUtilities;/home/simon/projects/eoi-document-generator/LC120MiniBoardFirmware/libs/CppUtilities")

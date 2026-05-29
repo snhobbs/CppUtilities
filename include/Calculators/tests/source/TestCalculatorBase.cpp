@@ -22,8 +22,8 @@ TEST(Calculator, ScaleDigitalValue) {
     for (auto low : kScaleLow) {
       int64_t last = std::numeric_limits<int64_t>::min();
       for (uint32_t i = 0; i < (1 << kBits); i++) {
-        int64_t value = Calculator<int64_t>::ScaleDigitalValue<int64_t>(
-            i, kBits, static_cast<int64_t>(low), static_cast<int64_t>(high));
+        int64_t value = Calculator::ScaleDigitalValue<int64_t>(
+            static_cast<int64_t>(i), static_cast<int32_t>(kBits), static_cast<int64_t>(low), static_cast<int64_t>(high));
         EXPECT_GT(value, last);
         last = value;
       }
@@ -39,11 +39,10 @@ TEST(Calculator, ScaleToDigitalValue) {
   for (auto high : kScaleHigh) {
     for (auto low : kScaleLow) {
       for (uint32_t i = 0; i < (1 << kBits); i++) {
-        int64_t value = Calculator<int64_t>::ScaleDigitalValue<int64_t>(
-            i, kBits, static_cast<int64_t>(low), static_cast<int64_t>(high));
-        int64_t scaled = Calculator<int64_t>::ScaleToDigitalValue<int64_t>(
-            value, kBits, static_cast<int64_t>(low),
-            static_cast<int64_t>(high));
+        int64_t value = Calculator::ScaleDigitalValue<int64_t>(
+            static_cast<int64_t>(i), static_cast<int32_t>(kBits), static_cast<int64_t>(low), static_cast<int64_t>(high));
+        int64_t scaled = Calculator::ScaleToDigitalValue<int64_t>(
+            value, static_cast<int32_t>(kBits), static_cast<int64_t>(low), static_cast<int64_t>(high));
 
         EXPECT_EQ(i, scaled);
       }
@@ -58,10 +57,10 @@ TEST(Calculator, ScaleToDigitalValuePrint) {
   for (auto high : kScaleHigh) {
     for (auto low : kScaleLow) {
       for (uint32_t i = 0; i < (1 << kBits); i++) {
-        int64_t value = Calculator<int64_t>::ScaleDigitalValue<int64_t>(
+        int64_t value = Calculator::ScaleDigitalValue<int64_t>(
             i, kBits, low, high);
-        int64_t scaled = Calculator<int64_t>::ScaleToDigitalValue<int64_t>(
-            value, kBits, low, high);
+        int64_t scaled = Calculator::ScaleToDigitalValue<int64_t>(
+            value, static_cast<int32_t>(kBits), static_cast<int64_t>(low), static_cast<int64_t>(high));
 
         EXPECT_EQ(i, scaled);
         std::cout << i << "\t" << value << "\t" << scaled << "\n";
@@ -101,10 +100,10 @@ TEST(Calculator, TwoNodeVoltageDivider) {
   };
 
   for (auto pt : cases) {
-    double out = Calculator<double>::TwoNodeVoltageDivider<double>(
+    double out = Calculator::TwoNodeVoltageDivider<double>(
         std::get<0>(pt), std::get<1>(pt), std::get<2>(pt), std::get<3>(pt));
     EXPECT_NEAR(std::get<4>(pt), out, 1e-12);
-    double v2 = Calculator<double>::TwoNodeVoltageDividerReverse<double>(
+    double v2 = Calculator::TwoNodeVoltageDividerReverse<double>(
         std::get<0>(pt), std::get<4>(pt), std::get<2>(pt), std::get<3>(pt));
     EXPECT_NEAR(std::get<1>(pt), v2, 1e-12);
   }
@@ -120,11 +119,11 @@ TEST(Calculator, ThreeNodeVoltageDivider) {
       };
 
   for (auto pt : cases) {
-    double out = Calculator<double>::ThreeNodeVoltageDivider<double>(
+    double out = Calculator::ThreeNodeVoltageDivider<double>(
         std::get<0>(pt), std::get<1>(pt), std::get<2>(pt), std::get<3>(pt),
         std::get<4>(pt), std::get<5>(pt));
     EXPECT_NEAR(std::get<6>(pt), out, 1e-12);
-    double v3 = Calculator<double>::ThreeNodeVoltageDividerReversed<double>(
+    double v3 = Calculator::ThreeNodeVoltageDividerReversed<double>(
         std::get<0>(pt), std::get<1>(pt), std::get<6>(pt), std::get<3>(pt),
         std::get<4>(pt), std::get<5>(pt));
     EXPECT_NEAR(std::get<2>(pt), v3, 1e-12);
@@ -141,10 +140,10 @@ TEST(Calculator, ThreeNodeVoltageDividerReversed) {
   double node_b_value_high = 3.3;
   double node_b_value_low = 0;
 
-  double low = Calculator<double>::ThreeNodeVoltageDividerReversed<double>(
+  double low = Calculator::ThreeNodeVoltageDividerReversed<double>(
       node_a_value, node_b_value_high, node_value, node_a_resistor,
       node_b_resistor, output_fb_resistor);
-  double high = Calculator<double>::ThreeNodeVoltageDividerReversed<double>(
+  double high = Calculator::ThreeNodeVoltageDividerReversed<double>(
       node_a_value, node_b_value_low, node_value, node_a_resistor,
       node_b_resistor, output_fb_resistor);
   EXPECT_NEAR(0.2, low, 0.05);
@@ -161,11 +160,11 @@ TEST(Calculator, InvertingAmplifier) {
   double last = std::numeric_limits<double>::max();
   for (double inverting_value = low; inverting_value < high;
        inverting_value += kStep) {
-    double output = Calculator<double>::AmplifierOutput<double>(
+    double output = Calculator::AmplifierOutput<double>(
         noninverting_value, inverting_value, resistor_in, fb_resistor, high,
         low);
     double input_calculated =
-        Calculator<double>::CalculateInvertingInputFromAmplifierOutput<double>(
+        Calculator::CalculateInvertingInputFromAmplifierOutput<double>(
             noninverting_value, output, resistor_in, fb_resistor);
     if (output >= high || output <= low) {
       continue;
@@ -186,11 +185,11 @@ TEST(Calculator, NonInvertingAmplifier) {
   double last = std::numeric_limits<double>::min();
   for (double noninverting_value = low; noninverting_value < high;
        noninverting_value += kStep) {
-    double output = Calculator<double>::AmplifierOutput<double>(
+    double output = Calculator::AmplifierOutput<double>(
         noninverting_value, inverting_value, resistor_in, fb_resistor, high,
         low);
     double input_calculated =
-        Calculator<double>::CalculateNoneInvertingInputFromAmplifierOutput<
+        Calculator::CalculateNoneInvertingInputFromAmplifierOutput<
             double>(inverting_value, output, resistor_in, fb_resistor);
     if (output >= high || output <= low) continue;
     EXPECT_NEAR(noninverting_value, input_calculated, 0.0001);
